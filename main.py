@@ -63,7 +63,7 @@ def determine_k_values(pipe, boundary):
   # if upper or lower bound of K values
   total_k = 0.0
   
-  for fitting in fittings:
+  for fitting in pipe.fittings:
     total_k += K_VALUES[fitting][boundary] 
     
   return total_k
@@ -75,11 +75,11 @@ def pipe_headloss(flow, pipe):
   roughness = pipe["roughness"]
   k = determine_k_values(pipe, boundary)
   
-  v = velocity(flow, pipe["diameter"])
+  v = velocity(flow, diameter)
   
-  f = friction_factor(flow, pipe["diameter"], pipe["roughness"])
+  f = friction_factor(flow, diameter, roughness)
   
-  friction_loss = ( f * length / d * v**2 / (2 * G) )          # f (L/D) * (v^2/2g)
+  friction_loss = ( f * length / diameter * v**2 / (2 * G) )          # f (L/D) * (v^2/2g)
   fittings_loss = pipe.k_values_fittings * v**2 / (2 * G)      # K * (v^2/2g)   
 
 def total_headloss(flow, pipes):
