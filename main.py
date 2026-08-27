@@ -92,7 +92,7 @@ def total_headloss(flow, pipes):
 
 def plot_system_curves(pipes):
 
-  flows = [ q / 1000 for q in range(1, 1001)  ]                # assign m3/s from a range of l/s
+  flows = [ q / 1000 for q in range(1, 1001) ]                # assign m3/s from a range of l/s
 
   losses = [ total_headloss(q, pipes) for q in flows ]
 
@@ -104,3 +104,6 @@ def plot_system_curves(pipes):
   plt.grid()
 
   plt.show()
+
+# Call function
+plot_system_curves(pipes)
