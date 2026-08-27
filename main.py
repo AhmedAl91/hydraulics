@@ -10,8 +10,6 @@ G = 9.81                                     # m2/s
 NU = 1.0e-6                                  # m2/s, approximate kinematic viscosity
 RHO = 998                                    # kg/m3, approximate density
 
-total_k += K_VALUES[fitting][case]
-
 # Boundary
 boundary = "upper"                            # for conservatism in k values
 
