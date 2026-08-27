@@ -23,7 +23,7 @@ pipes = {
     "roughness": 0.0001,                       # m = 0.1 mm, typical cast iron pipe with concrete lining
     
     # Fittings installed in this pipe
-    "fitings": [,
+    "fittings": [
       "pipe_bend_45_degrees", 
       "pipe_bend_90_degrees_long",
       "pipe_bend_90_degrees_long",
