@@ -1,6 +1,7 @@
 #  Libraries & packages
 import math                                  # for basic mathematic operations
 import matplotlib.pyplot as plt              # for plotting system curve
+from fittings import K_VALUES                # resistance coefficient library
 
 # Constants
 G = 9.81                                     # m2/s
@@ -9,8 +10,7 @@ G = 9.81                                     # m2/s
 NU = 1.0e-6                                  # m2/s, approximate kinematic viscosity
 RHO = 998                                    # kg/m3, approximate density
 
-# Declare nodes, use this later
-nodes = {}
+total_k += K_VALUES[fitting][case]
 
 # Boundary
 boundary = "upper"                            # for conservatism in k values
@@ -38,13 +38,6 @@ pipes = {
   }
 }
 
-# Resistance coefficient library
-k_values_fittings_definition = {
-  "pipe_bend_45_degrees": [0.15, 0.4],         
-  "pipe_bend_90_degrees_long": [0.2, 0.4],
-  "pipe_bend_90_degrees_short": [0.5, 1.0]
-} 
-
 # Utility functions    
 def area(diameter):
   return math.pi * diameter**2 / 4
@@ -70,16 +63,10 @@ def friction_factor(flow, diameter, roughness):
 
 def determine_k_values(pipe, boundary):
   # if upper or lower bound of K values
-  boundaries = {
-    "lower": 0
-    "upper": 1
-  }
-  case = boundaries[boundary]
-
   total_k = 0.0
   
   for fitting in fittings:
-    total_k += k_values_fittings_definition[fitting][case] 
+    total_k += K_VALUES[fitting][boundary] 
     
   return total k
     
@@ -98,7 +85,24 @@ def pipe_headloss(flow, pipe):
   fittings_loss = pipe.k_values_fittings * v**2 / (2 * G)      # K * (v^2/2g)   
 
 def total_headloss(flow, pipes):
-# Return total headloss through pipes arranged in series.
+# Return total headloss through pipes arranged in series
   for pipe_id, pipe in pipes.items():
     result = pipe_headloss(flow, pipe)
     total_loss += result
+    
+  return total_loss    
+
+def plot_system_curves(pipes):
+
+  flows = [ q / 1000 for q in range(1, 1001)  ]                # assign m3/s from a range of l/s
+
+  losses = [ total_headloss(q, pipes) for q in flows ]
+
+  plt.plot(flows, losses)
+
+  plt.xlabel("Flow (m³/s)")
+  plt.ylabel("Headloss (m)")
+  plt.title("System Resistance Curve")
+  plt.grid()
+
+  plt.show()
