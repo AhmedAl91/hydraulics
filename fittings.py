@@ -1,6 +1,16 @@
 K_VALUES = {
-    # upper and low bounds for k values
-    "pipe_bend_45_degrees": [0.15, 0.40],
-    "pipe_bend_90_degrees_long": [0.20, 0.40],
-    "pipe_bend_90_degrees_short": [0.50, 1.00],
+    "pipe_bend_45_degrees": {
+        "lower": 0.15,
+        "upper": 0.40,
+    },
+
+    "pipe_bend_90_degrees_long": {
+        "lower": 0.20,
+        "upper": 0.40,
+    },
+
+    "pipe_bend_90_degrees_short": {
+        "lower": 0.50,
+        "upper": 1.00,
+    },
 }
