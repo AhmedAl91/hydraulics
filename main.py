@@ -66,7 +66,7 @@ def determine_k_values(pipe, boundary):
   for fitting in fittings:
     total_k += K_VALUES[fitting][boundary] 
     
-  return total k
+  return total_k
     
 def pipe_headloss(flow, pipe):
 # Return friction, fitting and total headloss for one pipe
