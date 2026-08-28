@@ -35,7 +35,7 @@ def total_headloss(flow, pipes, boundary):
   total_loss = 0.0
   
   for pipe_id, pipe in pipes.items():
-    result = hydraulics.pipe_headloss(flow, pipe, boundary)
+    result = pipe_headloss(flow, pipe, boundary)
     total_loss += result
     
   return total_loss    
