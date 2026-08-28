@@ -46,9 +46,9 @@ def plot_system_curves(pipes):
   
   flows = [q / 1000 for q in range(1, 501)]                # assign m3/s
 
-  lower_losses = [hydraulics.total_headloss(q, pipes, "lower") for q in flows]
+  lower_losses = [total_headloss(q, pipes, "lower") for q in flows]
   
-  upper_losses = [hydraulics.total_headloss(q, pipes, "upper") for q in flows]
+  upper_losses = [total_headloss(q, pipes, "upper") for q in flows]
 
   plt.plot(flows, lower_losses, label="Lower resistance")
   
