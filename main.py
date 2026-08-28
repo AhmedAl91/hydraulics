@@ -11,8 +11,8 @@ G = 9.81                                     # m2/s
 # Water parameters @ 20 C
 NU = 1.0e-6                                  # m2/s, approximate kinematic viscosity
 
-pipes = system_design.pipes
-ducts = system_design.ducts
+pipes = system.pipes
+ducts = system.ducts
 
 def pipe_headloss(flow, pipe, boundary):
   # Return friction, fitting and total headloss for one pipe
@@ -46,9 +46,9 @@ def plot_system_curves(pipes):
   
   flows = [q / 1000 for q in range(1, 501)]                # assign m3/s
 
-  lower_losses = [hydraulics.total_headloss(q, system.pipes, "lower") for q in flows]
+  lower_losses = [hydraulics.total_headloss(q, pipes, "lower") for q in flows]
   
-  upper_losses = [hydraulics.total_headloss(q, system.pipes, "upper") for q in flows]
+  upper_losses = [hydraulics.total_headloss(q, pipes, "upper") for q in flows]
 
   plt.plot(flows, lower_losses, label="Lower resistance")
   
