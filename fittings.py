@@ -101,4 +101,11 @@ K_VALUES = {
         "lower": 0.80,
         "upper": 0.80,
     },
+    # Sudden enlargements
+    # Sudden contractions
+    # B.S. tapers
+    # Valves
+    # Other valves
+    # Exit losses
+    # Manholes...
 }
