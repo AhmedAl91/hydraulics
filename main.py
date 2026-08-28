@@ -7,9 +7,6 @@ import system                                # input data: pipes and ducts
 # Constants
 G = 9.81                                     # m2/s
 
-# Water parameters @ 20 C
-NU = 1.0e-6                                  # m2/s, approximate kinematic viscosity
-
 pipes = system.pipes
 ducts = system.ducts
 
