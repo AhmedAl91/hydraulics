@@ -3,7 +3,7 @@ import math                                  # for basic mathematic operations
 import matplotlib.pyplot as plt              # for plotting system curve
 from fittings import K_VALUES                # resistance coefficient library
 import hydraulics                            # fluid mechanic equations
-import system_design                         # input data: pipes and ducts 
+import system                                # input data: pipes and ducts 
 
 # Constants
 G = 9.81                                     # m2/s
@@ -46,9 +46,9 @@ def plot_system_curves(pipes):
   
   flows = [q / 1000 for q in range(1, 501)]                # assign m3/s
 
-  lower_losses = [hydraulics.total_headloss(q, pipes, "lower") for q in flows]
+  lower_losses = [hydraulics.total_headloss(q, system.pipes, "lower") for q in flows]
   
-  upper_losses = [hydraulics.total_headloss(q, pipes, "upper") for q in flows]
+  upper_losses = [hydraulics.total_headloss(q, system.pipes, "upper") for q in flows]
 
   plt.plot(flows, lower_losses, label="Lower resistance")
   
