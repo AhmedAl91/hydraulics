@@ -22,7 +22,7 @@ pipes = {
     "diameter": 0.75,                          # m, internal diameter
     "roughness": 0.0001,                       # m = 0.1 mm, typical cast iron pipe with concrete lining
     
-    # Fittings installed in this pipe
+    # Fittings and bends installed in this pipe
     "fittings": [
       "pipe_bend_45_degrees", 
       "pipe_bend_90_degrees_long",
@@ -63,7 +63,7 @@ def determine_k_values(pipe, boundary):
   # if upper or lower bound of K values
   total_k = 0.0
   
-  for fitting in pipe.fittings:
+  for fitting in pipe["fittings"]:
     total_k += K_VALUES[fitting][boundary] 
     
   return total_k
@@ -80,7 +80,7 @@ def pipe_headloss(flow, pipe):
   f = friction_factor(flow, diameter, roughness)
   
   friction_loss = ( f * length / diameter * v**2 / (2 * G) )          # f (L/D) * (v^2/2g)
-  fittings_loss = pipe.k_values_fittings * v**2 / (2 * G)      # K * (v^2/2g)   
+  fittings_loss = k * v**2 / (2 * G)                                  # K * (v^2/2g)   
 
 def total_headloss(flow, pipes):
 # Return total headloss through pipes arranged in series
@@ -91,8 +91,8 @@ def total_headloss(flow, pipes):
   return total_loss    
 
 def plot_system_curves(pipes):
-
-  flows = [ q / 1000 for q in range(1, 1001) ]                # assign m3/s from a range of l/s
+  # plot head losses against a range of 1 to 1000 l/s
+  flows = [ q / 1000 for q in range(1, 1001) ]                # assign m3/s
 
   losses = [ total_headloss(q, pipes) for q in flows ]
 
