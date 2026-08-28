@@ -69,7 +69,7 @@ def determine_k_values(pipe, boundary):
   return total_k
     
 def pipe_headloss(flow, pipe):
-# Return friction, fitting and total headloss for one pipe
+  # Return friction, fitting and total headloss for one pipe
   diameter = pipe["diameter"]
   length = pipe["length"]
   roughness = pipe["roughness"]
@@ -81,9 +81,13 @@ def pipe_headloss(flow, pipe):
   
   friction_loss = ( f * length / diameter * v**2 / (2 * G) )          # f (L/D) * (v^2/2g)
   fittings_loss = k * v**2 / (2 * G)                                  # K * (v^2/2g)   
+  
+  return friction_loss + fittings_loss
 
 def total_headloss(flow, pipes):
-# Return total headloss through pipes arranged in series
+  # Return total headloss through pipes arranged in series
+  total_loss = 0.0
+  
   for pipe_id, pipe in pipes.items():
     result = pipe_headloss(flow, pipe)
     total_loss += result
@@ -92,9 +96,9 @@ def total_headloss(flow, pipes):
 
 def plot_system_curves(pipes):
   # plot head losses against a range of 1 to 1000 l/s
-  flows = [ q / 1000 for q in range(1, 1001) ]                # assign m3/s
+  flows = [q / 1000 for q in range(1, 1001)]                # assign m3/s
 
-  losses = [ total_headloss(q, pipes) for q in flows ]
+  losses = [total_headloss(q, pipes) for q in flows]
 
   plt.plot(flows, losses)
 
