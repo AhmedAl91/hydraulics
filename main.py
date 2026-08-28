@@ -69,5 +69,11 @@ def plot_system_curves(pipes):
 
   plt.show()
 
+  plt.savefig(
+    "outputs/system_curve.png",
+    dpi=150,
+    bbox_inches="tight"
+  )
+
 # Call function
 plot_system_curves(pipes)
