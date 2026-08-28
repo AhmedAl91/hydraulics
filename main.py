@@ -57,7 +57,13 @@ def plot_system_curves(pipes):
       label="Available head (m)"
   )
   plt.title("System Resistance Curves")
-  
+  plt.fill_between(
+    flows,
+    lower_losses,
+    upper_losses,
+    alpha=0.2,
+    label="Resistance uncertainty"
+  )
   plt.grid()
   plt.legend()
 
