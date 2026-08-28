@@ -7,8 +7,11 @@ import system                                # input data: pipes and ducts
 # Constants
 G = 9.81                                     # m2/s
 
+# Declare system design inputs
 pipes = system.pipes
 ducts = system.ducts
+max_flow = system.max_flow                   # l/s
+available_head = system.available_head       # m
 
 def pipe_headloss(flow, pipe, boundary):
   # Return friction, fitting and total headloss for one pipe
@@ -37,10 +40,9 @@ def total_headloss(flow, pipes, boundary):
   return total_loss    
 
 def plot_system_curves(pipes):
-  # plot head losses against a range of 1 to 1000 l/s
-  available_head = 0.05                                     # m
+  # plot head losses against a range of flows  
   
-  flows = [q / 1000 for q in range(1, 501)]                # assign m3/s
+  flows = [q / 1000 for q in range(1, max_flow)]                # assign m3/s
 
   lower_losses = [total_headloss(q, pipes, "lower") for q in flows]
   
@@ -52,6 +54,7 @@ def plot_system_curves(pipes):
 
   plt.xlabel("Flow (m³/s)")
   plt.ylabel("Headloss (m)")
+  # Intersect system curve with available head
   plt.axhline(
       y=available_head,
       label="Available head (m)"
