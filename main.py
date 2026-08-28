@@ -42,16 +42,34 @@ def total_headloss(flow, pipes, boundary):
 
 def plot_system_curves(pipes):
   # plot head losses against a range of 1 to 1000 l/s
-  flows = [q / 1000 for q in range(1, 1001)]                # assign m3/s
+  available_head = 0.05 m
+  
+  flows = [q / 1000 for q in range(1, 501)]                # assign m3/s
 
-  losses = [hydraulics.total_headloss(q, pipes) for q in flows]
+  lower_losses = [hydraulics.total_headloss(q, pipes, "lower") for q in flows]
+  
+  upper_losses = [hydraulics.total_headloss(q, pipes, "upper") for q in flows]
 
-  plt.plot(flows, losses)
+  plt.plot(flows, lower_losses, label="Lower resistance")
+  
+  plt.plot(flows, upper_losses, label="Upper resistance")
 
   plt.xlabel("Flow (m³/s)")
   plt.ylabel("Headloss (m)")
-  plt.title("System Resistance Curve")
+  plt.axhline(
+      y=available_head,
+      label="Available head (m)"
+  )
+  plt.title("System Resistance Curves")
+  plt.fill_between(
+    flows,
+    lower_losses,
+    upper_losses,
+    alpha=0.2,
+    label="Resistance uncertainty"
+  )
   plt.grid()
+  plt.legend()
 
   plt.show()
 
