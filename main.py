@@ -42,7 +42,7 @@ def total_headloss(flow, pipes, boundary):
 
 def plot_system_curves(pipes):
   # plot head losses against a range of 1 to 1000 l/s
-  available_head = 0.05 m
+  available_head = 0.05                                     # m
   
   flows = [q / 1000 for q in range(1, 501)]                # assign m3/s
 
