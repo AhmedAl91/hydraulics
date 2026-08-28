@@ -1,7 +1,6 @@
 #  Libraries & packages
 import math                                  # for basic mathematic operations
 import matplotlib.pyplot as plt              # for plotting system curve
-from fittings import K_VALUES                # resistance coefficient library
 import hydraulics                            # fluid mechanic equations
 import system                                # input data: pipes and ducts 
 

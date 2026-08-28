@@ -1,3 +1,6 @@
+
+from fittings import K_VALUES                # resistance coefficient library
+
 def area(diameter):
   return math.pi * diameter**2 / 4
 
