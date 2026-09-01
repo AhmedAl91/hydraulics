@@ -10,7 +10,7 @@ nodes = {
 
 # Example merging flows: Q3 = Q1 + Q2         # m3/s
 # Requires a manual check for continuity of flow at junctions, i.e. Q1 + Q2 = Q3
-flow_cases = {
+design_flows = {
     "average": {
       "P01": 500,
       "P02": 300, 

@@ -11,7 +11,7 @@ G = 9.81                                     # m2/s
 nodes = system.nodes
 pipes = system.pipes
 ducts = system.ducts
-flow_cases = system.flow_cases                # m3/s
+design_flows = system.design_flows                # m3/s
 
 def pipe_headloss(flow, pipe, boundary):
   # Return friction, fitting and total headloss for one pipe
@@ -35,7 +35,7 @@ def plot_system_curves(pipes, case="average"):
 
     available_head = (nodes[pipe["from_node"]]["aod"] - nodes[pipe["to_node"]]["aod"]) / 1000  # m
 
-    max_flow = flow_cases[case][pipe_id] + 1                      # l/s
+    max_flow = design_flows[case][pipe_id] + 1                      # l/s
 
     flows = [q / 1000 for q in range(1, max_flow, 1)]                       # m3/s
     
