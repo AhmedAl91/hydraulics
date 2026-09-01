@@ -29,10 +29,6 @@ def pipe_headloss(flow, pipe, boundary):
   
   return friction_loss + fittings_loss
 
-def total_headloss(flow, pipe, boundary):
-  # Return total headloss through pipe
-  return pipe_headloss(flow, pipe, boundary)    
-
 def plot_system_curves(pipes, case="average"):
   # plot head losses against a range of flows  
   for pipe_id, pipe in pipes.items():
@@ -43,9 +39,9 @@ def plot_system_curves(pipes, case="average"):
 
     flows = [q / 1000 for q in range(1, max_flow, 1)]                       # m3/s
     
-    lower_losses = [total_headloss(q, pipe, "lower") for q in flows]
+    lower_losses = [pipe_headloss(q, pipe, "lower") for q in flows]
     
-    upper_losses = [total_headloss(q, pipe, "upper") for q in flows]
+    upper_losses = [pipe_headloss(q, pipe, "upper") for q in flows]
   
     plt.plot(flows, lower_losses, label="Lower resistance")
     

@@ -51,7 +51,7 @@ pipes = {
     
     # Fittings and bends installed
     "fittings": [
-      "pipe_bend_45_degrees", 
+      "pipe_bend_45_degrees_long", 
       "pipe_bend_90_degrees_long",
       "pipe_bend_90_degrees_long",
       "pipe_bend_90_degrees_short",
@@ -67,8 +67,7 @@ pipes = {
     "roughness": 0.0001,                       # m = 0.1 mm, typical cast iron pipe with concrete lining
     
     # Fittings and bends installed
-    "fittings": [
-      "pipe_bend_45_degrees", 
+    "fittings": [ 
       "pipe_bend_90_degrees_long",
       "pipe_bend_90_degrees_long",
       "pipe_bend_90_degrees_short",
@@ -85,7 +84,6 @@ pipes = {
     
     # Fittings and bends installed
     "fittings": [
-      "pipe_bend_45_degrees", 
       "pipe_bend_90_degrees_long",
       "pipe_bend_90_degrees_long",
       "pipe_bend_90_degrees_short",
