@@ -12,15 +12,15 @@ nodes = {
 # Requires a manual check for continuity of flow at junctions, i.e. Q1 + Q2 = Q3
 flow_cases = {
     "average": {
-      "P01": 50,
-      "P02": 30, 
-      "P03": 80, 
+      "P01": 500,
+      "P02": 300, 
+      "P03": 800, 
     },   
 
     "peak": {
-      "P01": 100,
-      "P02": 60, 
-      "P03": 160, 
+      "P01": 1000,
+      "P02": 600, 
+      "P03": 1600, 
     },                                  
 }
 # Example diverging flows: Q1 = Q2 + Q3 
