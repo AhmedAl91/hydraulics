@@ -39,9 +39,9 @@ def plot_system_curves(pipes, case="average"):
 
     available_head = nodes[pipe["from_node"]]["aod"] - nodes[pipe["to_node"]]["aod"]  # m
 
-    max_flow = flow_cases[case][pipe_id] + 1                      # m3/s
+    max_flow = flow_cases[case][pipe_id] + 1                      # l/s
 
-    flows = [q for q in range(0.01, max_flow, 0.001)]                       # m3/s
+    flows = [q / 1000 for q in range(1, max_flow, 1)]                       # m3/s
     
     lower_losses = [total_headloss(q, pipe, "lower") for q in flows]
     
