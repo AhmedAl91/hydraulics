@@ -66,7 +66,7 @@ def plot_system_curves(pipes, case="average"):
     plt.legend()
   
     plt.savefig(
-      "outputs/system_curve.png",
+      f"outputs/system_curve{pipe_id}.png",
       dpi=150,
       bbox_inches="tight"
     )
