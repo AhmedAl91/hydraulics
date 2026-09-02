@@ -102,15 +102,131 @@ K_VALUES = {
         "upper": 0.80,
     },
     # Sudden enlargements
-    # Sudden contractions
-    # B.S. tapers
-    # Valves
-    # Other valves
-    # Exit losses
-    # Manhole losses
-    "pipe_exit_into_manhole": {
+    "enlargement_4_5": {
+        "lower": 0.15,
+        "upper": 0.15,
+    },
+    "enlargement_3_4": {
+        "lower": 0.20,
+        "upper": 0.20,
+    },
+    "enlargement_2_3": {
+        "lower": 0.35,
+        "upper": 0.35,
+    },
+    "enlargement_1_2": {
+        "lower": 0.60,
+        "upper": 0.60,
+    },
+    "enlargement_1_3": {
         "lower": 0.80,
         "upper": 0.80,
+    },
+    "enlargement_1_5": {
+        "lower": 1.00,
+        "upper": 1.00,
+    },
+    # Sudden contractions
+    "contraction_5_4": {
+        "lower": 0.15,
+        "upper": 0.15,
+    },
+    "contraction_4_3": {
+        "lower": 0.20,
+        "upper": 0.20,
+    },
+    "contraction_3_2": {
+        "lower": 0.30,
+        "upper": 0.30,
+    },
+    "contraction_2_1": {
+        "lower": 0.35,
+        "upper": 0.35,
+    },
+    "contraction_3_1": {
+        "lower": 0.45,
+        "upper": 0.45,
+    },
+    "contraction_5_1": {
+        "lower": 0.50,
+        "upper": 0.50,
+    },
+    # B.S. tapers
+    "taper_down": {
+        "lower": 0.00,
+        "upper": 0.00,
+    },
+    "taper_up_4_5": {
+        "lower": 0.03,
+        "upper": 0.03,
+    },
+    "taper_up_3_4": {
+        "lower": 0.04,
+        "upper": 0.04,
+    },
+    "taper_up_1_2": {
+        "lower": 0.12,
+        "upper": 0.12,
+    },
+    # Valves
+    "gate_valve_full_open": {
+        "lower": 0.12,
+        "upper": 0.12,
+    },
+    "gate_valve_quarter_closed": {
+        "lower": 1.00,
+        "upper": 1.00,
+    },
+    "gate_valve_half_closed": {
+        "lower": 6.00,
+        "upper": 6.00,
+    },
+    "gate_valve_three_quarters_closed": {
+        "lower": 24.00,
+        "upper": 24.00,
+    },
+    "globe_valve_full_open": {
+        "lower": 10.00,
+        "upper": 10.00,
+    },
+    "right_angled_valve_full_open": {
+        "lower": 5.00,
+        "upper": 5.00,
+    },
+    "butterfly_valve_full_open": {
+        "lower": 0.30,
+        "upper": 0.30,
+    },
+    # Other valves
+    "non_return_valve": {
+        "lower": 2.00,
+        "upper": 2.00,
+    },
+    "pressure_reducing_valve": {
+        "lower": 10.00,
+        "upper": 10.00,
+    },
+    # Exit losses
+    "pipe_exit_sudden_enlargement": {
+        "lower": 1.00,
+        "upper": 1.00,
+    },
+    "pipe_exit_bellmouth_outlet": {
+        "lower": 0.20,
+        "upper": 0.20,
+    },
+    "flap_valve": {
+        "lower": 2.00,
+        "upper": 2.00,
+    },
+    # Manhole losses
+    "pipe_entry_into_manhole": {
+        "lower": 0.25,
+        "upper": 0.25,
+    },
+    "pipe_exit_into_manhole": {
+        "lower": 0.50,
+        "upper": 0.50,
     },
 
 }
