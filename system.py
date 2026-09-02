@@ -45,16 +45,17 @@ pipes = {
     "from_node": "N01",
     "to_node": "N02",
 
-    "length": 10.0,                            # m
-    "diameter": 0.75,                          # m, internal diameter
+    "length": 137.2 * 1.25,                    # m
+    "diameter": 0.60,                          # m, internal diameter
     "roughness": 0.0001,                       # m = 0.1 mm, typical cast iron pipe with concrete lining
     
     # Fittings and bends installed
     "fittings": [
-      "pipe_bend_45_degrees_long", 
-      "pipe_bend_90_degrees_long",
-      "pipe_bend_90_degrees_long",
+      "pipe_entry_into_manhole", 
       "pipe_bend_90_degrees_short",
+      "pipe_exit_into_manhole",
+      "pipe_entry_into_manhole",
+      "pipe_exit_into_manhole",
     ]
   },
   # "P02": {

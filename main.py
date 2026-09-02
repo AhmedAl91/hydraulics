@@ -39,13 +39,13 @@ def plot_system_curves(pipes, case="average"):
 
     flows = [q / 1000 for q in range(1, max_flow, 1)]                       # m3/s
     
-    lower_losses = [pipe_headloss(q, pipe, "lower") for q in flows]
+    # lower_losses = [pipe_headloss(q, pipe, "lower") for q in flows]
     
     upper_losses = [pipe_headloss(q, pipe, "upper") for q in flows]
   
-    plt.plot(flows, lower_losses, label="Lower resistance")
+    # plt.plot(flows, lower_losses, label="Lower resistance")
     
-    plt.plot(flows, upper_losses, label="Upper resistance")
+    plt.plot(flows, upper_losses, label="System resistance")
   
     plt.xlabel("Flow (m³/s)")
     plt.ylabel("Headloss (m)")
@@ -55,13 +55,13 @@ def plot_system_curves(pipes, case="average"):
         label="Available head (m)"
     )
     plt.title("System Resistance Curves")
-    plt.fill_between(
-      flows,
-      lower_losses,
-      upper_losses,
-      alpha=0.2,
-      label="Resistance uncertainty"
-    )
+    # plt.fill_between(
+    #   flows,
+    #   lower_losses,
+    #   upper_losses,
+    #   alpha=0.2,
+    #   label="Resistance uncertainty"
+    # )
     plt.grid()
     plt.legend()
   
