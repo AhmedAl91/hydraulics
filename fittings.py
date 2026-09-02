@@ -107,5 +107,10 @@ K_VALUES = {
     # Valves
     # Other valves
     # Exit losses
-    # Manholes...
+    # Manhole losses
+    "pipe_exit_into_manhole": {
+        "lower": 0.80,
+        "upper": 0.80,
+    },
+
 }
