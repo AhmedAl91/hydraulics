@@ -3,7 +3,7 @@ from fittings import K_VALUES                # resistance coefficient library
 import math                                  # for basic mathematic operations
 
 # Water parameters @ 20 C
-NU = 1.0e-6                                  # m2/s, approximate kinematic viscosity
+NU = 1.155e-6                                  # m2/s, approximate kinematic viscosity
 
 def area(diameter):
   return math.pi * diameter**2 / 4

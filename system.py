@@ -10,7 +10,7 @@ nodes = {
 
 # Example merging flows: Q3 = Q1 + Q2         # l/s
 # Requires a manual check for continuity of flow at junctions, i.e. Q1 + Q2 = Q3
-design_flows = {
+design_flows = {    
     "average": {
       "P01": 211,
       # "P02": 300, 
@@ -18,7 +18,7 @@ design_flows = {
     },   
 
     "peak": {
-      "P01": 500,
+      "P01": 211 + 192.4,
       # "P02": 600, 
       # "P03": 1600, 
     },                                  
@@ -45,9 +45,9 @@ pipes = {
     "from_node": "N01",
     "to_node": "N02",
 
-    "length": 137.2 * 1.25,                    # m
+    "length": 137.2 * 1.20,                    # m
     "diameter": 0.60,                          # m, internal diameter
-    "roughness": 0.0001,                       # m = 0.1 mm, typical cast iron pipe with concrete lining
+    "roughness": 0.00015,                       # m = 0.15 mm, concrete pipe with O-ring seal
     
     # Fittings and bends installed
     "fittings": [
@@ -97,7 +97,7 @@ ducts = {
     # Fixed characteristics
     "length": 10.0,                            # m
     "diameter": 0.75,                          # m, internal diameter
-    "roughness": 0.0001,                       # m = 0.1 mm, typical cast iron pipe with concrete lining
+    "roughness": 0.00015,                       # m = 0.15 mm, concrete pipe with O-ring seal
     
     # Fittings and bends installed
     "fittings": [

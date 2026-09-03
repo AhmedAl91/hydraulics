@@ -220,13 +220,13 @@ K_VALUES = {
         "upper": 2.00,
     },
     # Manhole losses
-    "pipe_entry_into_manhole": {
-        "lower": 0.25,
-        "upper": 0.25,
-    },
-    "pipe_exit_into_manhole": {
+    "pipe_entry_into_manhole": {    # Taken from Crane for 0 R/D
         "lower": 0.50,
         "upper": 0.50,
+    },
+    "pipe_exit_into_manhole": { # Taken from Crane
+        "lower": 1.00,
+        "upper": 1.00,
     },
 
 }
