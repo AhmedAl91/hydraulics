@@ -77,3 +77,7 @@ def plot_system_curves(pipes, case="average"):
 
 # Call function
 plot_system_curves(pipes, "average")
+
+
+# Call function
+plot_system_curves(pipes, "peak")
