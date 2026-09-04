@@ -110,12 +110,13 @@ def open_channel_flow_check(flow_case = "avg"):
 
   # Evaluated parameters
   critical_depth = (((flow_range[flow_case] / channel_width)**2)/G)**(1/3)                  # m
-  water_depth = critical_depth + 0.050                                                      # m, assumed starting value, to avoid Fr = 1 at the start of the calculation
-  friction_slope, froude_number = manning_friction_slope(flow_range[flow_case], channel_width, water_depth, mannings_n)
+  initial_water_depth = critical_depth + 0.050                                                      # m, assumed starting value, to avoid Fr = 1 at the start of the calculation
+  friction_slope, froude_number = manning_friction_slope(flow_range[flow_case], channel_width, initial_water_depth, mannings_n)
 
   # Iterative calculation to find water depth for given flow
   total_x = 0
   delta_x = 0.001
+  water_depth = initial_water_depth
   # This is iterating from the downstream end of the channel to the upstream end, 
   # calculating the water depth at each step based on the friction slope and Froude number. 
   # The loop continues until the total distance covered equals the channel length. 
@@ -137,10 +138,16 @@ def open_channel_flow_check(flow_case = "avg"):
       print("Warning: Water depth is negative. Check input parameters.")
       break
 
+    freeboard = max_water_depth - water_depth
     total_x += delta_x
 
   print(f"Flow case: {flow_case}, Flow: {flow_range[flow_case]:.3f} m³/s")
-  print(f"Water depth: {water_depth:.3f} m, Fraction of max depth: {water_depth / max_water_depth:.3f}, Froude number: {froude_number:.3f}", flush=True)
+  print(f"Downstream depth: {initial_water_depth:.3f} m")
+  print(f"Upstream depth:   {water_depth:.3f} m")
+  print(f"Depth increase:   {water_depth - initial_water_depth:.3f} m")
+  print(f"Freeboard:        {freeboard:.3f} m")
+  print(f"Upstream Fr:      {froude_number:.3f}")
+  print("-----------------------------")
 
 open_channel_flow_check("min")
 open_channel_flow_check("avg")
