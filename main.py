@@ -1,150 +1,38 @@
 #  Libraries & packages
 import math                                  # for basic mathematic operations
 import matplotlib.pyplot as plt              # for plotting system curve
-import hydraulics                            # fluid mechanic equations
-import system                                # input data: pipes and ducts 
+from pipe import Pipe 
+from channel import Channel 
+from node import Node 
+from network import Network 
+import system                                # input data
 
-# Constants
-G = 9.81                                     # m2/s
-KINEMATIC_VISCOSITY = 1.155e-6               # m2/s
 
-# Declare system design inputs
-nodes = system.nodes
-pipes = system.pipes
-ducts = system.ducts
-design_flows = system.design_flows                # m3/s
-
-# Construct pipes
-class Pipe:
-    def __init__(self, id, length, diameter, roughness, fittings=None):
-        self.id = id
-        self.length = length
-        self.diameter = diameter
-        self.roughness = roughness
-        self.fittings = fittings or []
-
-    def velocity(self, flow):
-        area = math.pi * self.diameter**2 / 4
-        return flow / area
-
-    def friction_factor(self, flow):
-        v = self.velocity(flow)
-
-        reynolds = (v * self.diameter / KINEMATIC_VISCOSITY)
-
-        # Example only — replace with your chosen friction-factor method
-        return hydraulics.friction_factor(
-            reynolds,
-            self.diameter,
-            self.roughness
-        )
-
-    def determine_k_values(self, boundary="upper"):
-        total_k = 0.0
-
-        for fitting in self.fittings:
-            total_k += K_VALUES[fitting][boundary]
-
-        return total_k
-
-    def headloss(self, flow, boundary="upper"):
-        v = self.velocity(flow)
-        f = self.friction_factor(flow)
-        k = self.determine_k_values(boundary)
-
-        friction_loss = (
-            f
-            * self.length / self.diameter
-            * v**2 / (2 * G)
-        )
-
-        fittings_loss = (
-            k
-            * v**2 / (2 * G)
-        )
-
-        return friction_loss + fittings_loss
-
-# Raw data, taken from user input API
-pipes_data = [
-  {
-    "id": "P01",
-    "length": 100,
-    "diameter": 0.3,
-    "roughness": 0.02,
-    "fittings": ["pipe_bend_90_degrees_short", "pipe_entry_into_manhole", "pipe_exit_into_manhole"],
-  },
-  {
-    "id": "P02",
-    "length": 100,
-    "diameter": 0.3,
-    "roughness": 0.02,
-    "fittings": [],
-  },
-]
-
-# Lookup dictionary of all pipe objects
+# Lookup dictionaries of all objects
 pipes = {}
 
-for pipe_data in pipes_data:
+for pipe_data in system.pipes_data:
     pipe = Pipe(**pipe_data)
     pipes[pipe.id] = pipe
 
+channels = {}
+
+for channel_data in system.channels_data:
+    channel = Channel(**channel_data)
+    channels[channel.id] = channel
+
+nodes = {}
+
+for node_data in system.nodes_data:
+    node = Node(**node_data)
+    nodes[node.id] = node
+
+network = Network(nodes, pipes, channels)
 
 
 
-def plot_system_curves(pipes, case="average"):
-  # plot head losses against a range of flows  
-  for pipe_id, pipe in pipes.items():
 
-    available_head = (nodes[pipe["from_node"]]["aod"] - nodes[pipe["to_node"]]["aod"]) / 1000  # m
-
-    max_flow = design_flows[case][pipe_id] + 1                      # l/s
-
-    flows = [q / 1000 for q in range(1, max_flow, 1)]                       # m3/s
-    
-    # lower_losses = [pipe_headloss(q, pipe, "lower") for q in flows]
-    
-    upper_losses = [pipe_headloss(q, pipe, "upper") for q in flows]
-  
-    # plt.plot(flows, lower_losses, label="Lower resistance")
-    
-    plt.plot(flows, upper_losses, label="System resistance")
-  
-    plt.xlabel("Flow (m³/s)")
-    plt.ylabel("Headloss (m)")
-    # Intersect system curve with available head
-    plt.axhline(
-        y=available_head,
-        label="Available head (m)"
-    )
-    plt.title("System Resistance Curves")
-    # plt.fill_between(
-    #   flows,
-    #   lower_losses,
-    #   upper_losses,
-    #   alpha=0.2,
-    #   label="Resistance uncertainty"
-    # )
-    plt.grid()
-    plt.legend()
-  
-    plt.savefig(
-      f"outputs/system_curve_{pipe_id}_{case}.png",
-      dpi=150,
-      bbox_inches="tight"
-    )
-  
-    plt.show()
-  
-  
-
-# # Call function
-# plot_system_curves(pipes, "average")
-
-
-# # Call function
-# plot_system_curves(pipes, "peak")
+#############################################################################
 
 def manning_friction_slope(flow, channel_width, water_depth, mannings_n):
   # Calculate friction slope using Manning's equation
