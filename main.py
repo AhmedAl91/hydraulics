@@ -72,7 +72,7 @@ pipes_data = [
     "length": 100,
     "diameter": 0.3,
     "roughness": 0.02,
-    "fittings": ["pipe_bend_90_degrees_short", "pipe_entry_into_manhole", pipe_exit_into_manhole],
+    "fittings": ["pipe_bend_90_degrees_short", "pipe_entry_into_manhole", "pipe_exit_into_manhole"],
   },
   {
     "id": "P02",
