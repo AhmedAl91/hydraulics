@@ -6,6 +6,7 @@ import system                                # input data: pipes and ducts
 
 # Constants
 G = 9.81                                     # m2/s
+KINEMATIC_VISCOSITY = 1.155e-6               # m2/s
 
 # Declare system design inputs
 nodes = system.nodes
@@ -13,21 +14,84 @@ pipes = system.pipes
 ducts = system.ducts
 design_flows = system.design_flows                # m3/s
 
-def pipe_headloss(flow, pipe, boundary):
-  # Return friction, fitting and total headloss for one pipe
-  diameter = pipe["diameter"]
-  length = pipe["length"]
-  roughness = pipe["roughness"]
-  k = hydraulics.determine_k_values(pipe, boundary)
-  
-  v = hydraulics.velocity(flow, diameter)
-  
-  f = hydraulics.friction_factor(flow, diameter, roughness)
-  
-  friction_loss = (f * length / diameter * v**2 / (2 * G))          # f (L/D) * (v^2/2g)
-  fittings_loss = k * v**2 / (2 * G)                                  # K * (v^2/2g)   
-  
-  return friction_loss + fittings_loss
+# Construct pipes
+class Pipe:
+    def __init__(self, id, length, diameter, roughness, fittings=None):
+        self.id = id
+        self.length = length
+        self.diameter = diameter
+        self.roughness = roughness
+        self.fittings = fittings or []
+
+    def velocity(self, flow):
+        area = math.pi * self.diameter**2 / 4
+        return flow / area
+
+    def friction_factor(self, flow):
+        v = self.velocity(flow)
+
+        reynolds = (v * self.diameter / KINEMATIC_VISCOSITY)
+
+        # Example only — replace with your chosen friction-factor method
+        return hydraulics.friction_factor(
+            reynolds,
+            self.diameter,
+            self.roughness
+        )
+
+    def determine_k_values(self, boundary="upper"):
+        total_k = 0.0
+
+        for fitting in self.fittings:
+            total_k += K_VALUES[fitting][boundary]
+
+        return total_k
+
+    def headloss(self, flow, boundary="upper"):
+        v = self.velocity(flow)
+        f = self.friction_factor(flow)
+        k = self.determine_k_values(boundary)
+
+        friction_loss = (
+            f
+            * self.length / self.diameter
+            * v**2 / (2 * G)
+        )
+
+        fittings_loss = (
+            k
+            * v**2 / (2 * G)
+        )
+
+        return friction_loss + fittings_loss
+
+# Raw data, taken from user input API
+pipes_data = [
+  {
+    "id": "P01",
+    "length": 100,
+    "diameter": 0.3,
+    "roughness": 0.02,
+    "fittings": ["pipe_bend_90_degrees_short", "pipe_entry_into_manhole", pipe_exit_into_manhole],
+  },
+  {
+    "id": "P02",
+    "length": 100,
+    "diameter": 0.3,
+    "roughness": 0.02,
+    "fittings": [],
+  },
+]
+
+# Lookup dictionary of all pipe objects
+pipes = {}
+
+for pipe_data in pipes_data:
+    pipe = Pipe(**pipe_data)
+    pipes[pipe.id] = pipe
+
+
+
 
 def plot_system_curves(pipes, case="average"):
   # plot head losses against a range of flows  
