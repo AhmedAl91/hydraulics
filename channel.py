@@ -3,14 +3,13 @@ import math                                  # for basic mathematic operations
 from constants import G, KINEMATIC_VISCOSITY
 
 class Channel:
-    def __init__(self, id, length, width, max_water_depth, mannings_n, flow_range, slope, from_node, to_node):
+    def __init__(self, id, length, width, max_water_depth, mannings_n, slope, from_node, to_node):
         
         self.id = id
         self.length = length
         self.width = width
         self.max_water_depth = max_water_depth
         self.mannings_n = mannings_n
-        self.flow_range = flow_range
         self.slope = slope
 
         self.from_node = from_node
@@ -44,15 +43,13 @@ class Channel:
     def critical_depth(self, flow):
         return (((flow / self.width)**2) / G) ** (1/3)
 
-    def uniform_channel_flow(self, flow_case = "avg"):
-        flow = self.flow_range[flow_case]
+    def uniform_channel_flow(self, flow):
+        pass
 
-    def non_uniform_channel_flow(self, flow_case = "avg"):
-        flow = self.flow_range[flow_case]
+    def non_uniform_channel_flow(self, flow):
+        pass
 
-    def gradually_varied_flow_profile(self, flow_case = "avg"):
-        flow = self.flow_range[flow_case]
-
+    def gradually_varied_flow_profile(self, flow):
         # Critical depth for rectangular channel
         critical_depth = self.critical_depth(flow)
 
@@ -89,7 +86,7 @@ class Channel:
            freeboard = self.max_water_depth - water_depth
            total_x += delta_x
 
-        print(f"Flow case: {flow_case}, Flow: {flow:.3f} m³/s")
+        print(f"Flow: {flow:.3f} m³/s")
         print(f"Downstream depth: {initial_water_depth:.3f} m")
         print(f"Upstream depth:   {water_depth:.3f} m")
         print(f"Depth increase:   {water_depth - initial_water_depth:.3f} m")

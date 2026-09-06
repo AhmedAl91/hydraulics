@@ -3,16 +3,20 @@ pipes_data = [
   {
     "id": "P01",
     "length": 100,
-    "diameter": 0.3,
-    "roughness": 0.02,
-    "from_node": "N03",
-    "to_node": "N04",
-    "fittings": ["pipe_bend_90_degrees_short", "pipe_entry_into_manhole", "pipe_exit_into_manhole"],
-	"flow_range": {
-		"min": 0.211,                   # m3/s
-		"avg": 0.324,                   # m3/s
-		"max": 0.408                    # m3/s
-	}
+    "diameter": 0.6,
+    "roughness": 0.03,
+    "from_node": "N01",
+    "to_node": "N02",
+    "fittings": ["pipe_bend_90_degrees_short", "pipe_entry_into_manhole", "pipe_exit_into_manhole"]
+  },
+  {
+    "id": "P02",
+    "length": 100,
+    "diameter": 0.6,
+    "roughness": 0.03,
+    "from_node": "N02",
+    "to_node": "N03",
+    "fittings": ["pipe_bend_90_degrees_short", "pipe_entry_into_manhole", "pipe_exit_into_manhole"]
   },
 ]
 
@@ -24,13 +28,8 @@ channels_data = [
     "mannings_n": 0.018,				# dimensionless
     "max_water_depth": 26.175 - 25.600,	# m
     "slope": 0.0,						# m/m
-    "from_node": "N01",
-    "to_node": "N02",
-	"flow_range": {
-		"min": 0.211,                   # m3/s
-		"avg": 0.324,                   # m3/s
-		"max": 0.408                    # m3/s
-	}
+    "from_node": "N02",
+    "to_node": "N04",
   },
 ]
 
@@ -41,6 +40,14 @@ nodes_data = [
     },
     {
         "id": "N02",
-        "aod": 25.600,
+        "aod": 25.600
+    },
+    {
+        "id": "N03",
+        "aod": 25.100
+    },
+    {
+        "id": "N04",
+        "aod": 24.800
     },
 ]

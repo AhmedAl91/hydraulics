@@ -22,19 +22,31 @@ class Network:
 
             self.incoming[link.to_node].append(link.id)
 
-    def continuity_residual(self, node_id, flows):
-        inflow = 0.0
-        outflow = 0.0
+    def continuity_residual(self, node_id, flows, flow_case):
+        connected_links = self.incoming[node_id] + self.outgoing[node_id]
 
-        for link_id in self.incoming[node_id]:
-            inflow += flows[link_id]
+        for link_id in connected_links:
+            if link_id not in flows:
+                raise ValueError(
+                    f"No flow value provided for link '{link_id}' "
+                    f"connected to node '{node_id}'."
+                )
+            
+        inflow = sum(
+            flows[link_id][flow_case]
+            for link_id in self.incoming[node_id]
+        )
 
-        for link_id in self.outgoing[node_id]:
-            outflow += flows[link_id]
+        outflow = sum(
+            flows[link_id][flow_case]
+            for link_id in self.outgoing[node_id]
+        )
 
-        external_flow = self.nodes[node_id].external_flow
+        # Solve for flows = 0.0 m3/s
+        return inflow - outflow
 
-        return inflow + external_flow - outflow
+    def is_boundary(self, node_id):
+        return len(self.incoming[node_id]) == 0 or len(self.outgoing[node_id]) == 0
 
 # Suppose you have:
 

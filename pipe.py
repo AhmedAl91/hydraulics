@@ -6,12 +6,11 @@ import matplotlib.pyplot as plt              # for plotting system curve
 from constants import G, KINEMATIC_VISCOSITY
 
 class Pipe:
-    def __init__(self, id, length, diameter, roughness, flow_range, from_node, to_node, fittings=None):
+    def __init__(self, id, length, diameter, roughness, from_node, to_node, fittings=None):
         self.id = id
         self.length = length
         self.diameter = diameter
         self.roughness = roughness
-        self.flow_range = flow_range
 
         self.from_node = from_node
         self.to_node = to_node
@@ -53,12 +52,10 @@ class Pipe:
     def headloss_partial(self, flow):
         pass
 
-    def plot_system_curves(self, nodes, flow_case="avg"):
+    def plot_system_curves(self, nodes, flow):
         upstream_node = nodes[self.from_node]
         downstream_node = nodes[self.to_node]
         available_head = upstream_node.aod - downstream_node.aod
-
-        flow = self.flow_range[flow_case]
 
         flows = [q / 1000 for q in range(1, flow, 1)]                       # m3/s
         
