@@ -75,7 +75,7 @@ class Pipe:
         plt.legend()
     
         plt.savefig(
-        f"outputs/system_curve_{self.id}_{flow_case}.png",
+        f"outputs/system_curve_{self.id}.png",
         dpi=150,
         bbox_inches="tight"
         )

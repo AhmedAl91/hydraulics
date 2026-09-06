@@ -57,6 +57,13 @@ for node_id, node in network.nodes.items():
     
     print(f"Node {node_id}: {residual:.6f}")
 
+headlosses = network.pipe_headlosses(
+    flows,
+    flow_case="avg",
+)
+
+print(headlosses)
+
 #############################################################################
 
 # def manning_friction_slope(flow, channel_width, water_depth, mannings_n):
