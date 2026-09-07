@@ -30,7 +30,7 @@ def open_channel_flow_check(flow_case = "avg"):
 
     # Evaluated parameters
     critical_depth = (((flow_range[flow_case] / channel_width)**2)/G)**(1/3)                  # m
-    initial_water_depth = critical_depth + 0.050                                              # m, assumed starting value, to avoid Fr = 1 at the start of the calculation
+    initial_water_depth = 0.453 # taken from hand calc # alternatively: critical_depth + 0.050               # m, assumed starting value, to avoid Fr = 1 at the start of the calculation
 
     # Iterative calculation to find water depth for given flow
     total_x = 0
