@@ -287,18 +287,22 @@ def screw_suction(flow_case = "avg"):
 #     "max": screw_suction("max")
 # }
 
-flow_range = {
-    "min": 0.084,                   # m3/s
-    "avg": 0.095,                   # m3/s
-    "max": 0.106                    # m3/s
-}
 
-print("Screw Suction Results:")
-screw_suction_results = {
-    "min": Channel("screw_suction", 1.2, 3.3, 20.40 - 19.70, 0.018, 0.0, "None", "None").gradually_varied_flow_profile(flow_range["min"], controlled_depth=20.40 - 19.70),
-    "avg": Channel("screw_suction", 1.2, 3.3, 20.40 - 19.70, 0.018, 0.0, "None", "None").gradually_varied_flow_profile(flow_range["avg"], controlled_depth=20.40 - 19.70),
-    "max": Channel("screw_suction", 1.2, 3.3, 20.40 - 19.70, 0.018, 0.0, "None", "None").gradually_varied_flow_profile(flow_range["max"], controlled_depth=20.40 - 19.70),
-}
+#####################################################################
+########################### NEW METHOD ##############################
+
+# flow_range = {
+#     "min": 0.084,                   # m3/s
+#     "avg": 0.095,                   # m3/s
+#     "max": 0.106                    # m3/s
+# }
+
+# print("Screw Suction Results:")
+# screw_suction_results = {
+#     "min": Channel("screw_suction", 1.2, 3.3, 20.40 - 19.70, 0.018, 0.0, "None", "None").gradually_varied_flow_profile(flow_range["min"], controlled_depth=20.40 - 19.70),
+#     "avg": Channel("screw_suction", 1.2, 3.3, 20.40 - 19.70, 0.018, 0.0, "None", "None").gradually_varied_flow_profile(flow_range["avg"], controlled_depth=20.40 - 19.70),
+#     "max": Channel("screw_suction", 1.2, 3.3, 20.40 - 19.70, 0.018, 0.0, "None", "None").gradually_varied_flow_profile(flow_range["max"], controlled_depth=20.40 - 19.70),
+# }
 
 flow_range = {
     "min": 0.168,                   # m3/s
@@ -308,7 +312,7 @@ flow_range = {
 
 print("Inlet Chamber Results:")
 inlet_chamber_results = {
-    "min": Channel("inlet_chamber", 1.5, 4.2, 22.40 - 19.70, 0.018, 0.0, "None", "None").gradually_varied_flow_profile(flow_range["min"], controlled_depth=20.409 - 19.70),
-    "avg": Channel("inlet_chamber", 1.2, 3.3, 22.40 - 19.70, 0.018, 0.0, "None", "None").gradually_varied_flow_profile(flow_range["avg"], controlled_depth=20.412 - 19.70),
-    "max": Channel("inlet_chamber", 1.2, 3.3, 22.40 - 19.70, 0.018, 0.0, "None", "None").gradually_varied_flow_profile(flow_range["max"], controlled_depth=20.414 - 19.70),
+    "min": Channel("inlet_chamber", 1.5, 4.2, 22.40 - 19.70, 0.018, 0.0, "None", "None").gradually_varied_flow_profile(flow_range["min"], controlled_depth=20.412 - 19.70),
+    "avg": Channel("inlet_chamber", 1.5, 4.2, 22.40 - 19.70, 0.018, 0.0, "None", "None").gradually_varied_flow_profile(flow_range["avg"], controlled_depth=20.412 - 19.70),
+    "max": Channel("inlet_chamber", 1.5, 4.2, 22.40 - 19.70, 0.018, 0.0, "None", "None").gradually_varied_flow_profile(flow_range["max"], controlled_depth=20.414 - 19.70),
 }
