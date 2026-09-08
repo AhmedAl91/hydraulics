@@ -42,6 +42,9 @@ class Channel:
 
     def critical_depth(self, flow):
         return (((flow / self.width)**2) / G) ** (1/3)
+    
+    def energy(self, flow, water_depth):
+        return ((self.velocity(flow, water_depth)**2) / (2 * G)) + water_depth
 
     def uniform_channel_flow(self, flow):
         pass
@@ -49,16 +52,19 @@ class Channel:
     def non_uniform_channel_flow(self, flow):
         pass
 
-    def gradually_varied_flow_profile(self, flow):
+    def gradually_varied_flow_profile(self, flow, controlled_depth=False):
         # Critical depth for rectangular channel
         critical_depth = self.critical_depth(flow)
 
         # Assumed downstream boundary depth
-        initial_water_depth = critical_depth + 0.050                               # m
+        if controlled_depth:
+            initial_water_depth = controlled_depth
+        else:
+            initial_water_depth = critical_depth + 0.010                                # m
 
         # Iterative calculation to find water depth for given flow
         total_x = 0.0
-        delta_x = 0.001
+        delta_y = 0.001
         water_depth = initial_water_depth
 
         # This is iterating from the downstream end of the channel to the upstream end, 
@@ -68,22 +74,38 @@ class Channel:
         # Finally, it prints the calculated water depth, its fraction of the maximum depth, and the Froude number.
         
         while total_x < self.length:
-           friction_slope  = self.manning_friction_slope(flow, water_depth)
+           friction_slope_1  = self.manning_friction_slope(flow, water_depth)
 
-           froude_number = self.froude_number(flow, water_depth)
+           froude_number_1 = self.froude_number(flow, water_depth)
 
-           if abs(1 - froude_number**2) < 0.05:
+           energy_1 = self.energy(flow, water_depth)
+
+           if abs(1 - froude_number_1**2) < 0.05:
               print("Approaching critical flow - GVF integration unstable")
               break
 
-           delta_y = ( (friction_slope - self.slope) / (1 - froude_number**2) ) * delta_x
            water_depth += delta_y
+
+           friction_slope_2  = self.manning_friction_slope(flow, water_depth)
+
+           froude_number_2 = self.froude_number(flow, water_depth)
+
+           energy_2 = self.energy(flow, water_depth)
+
+           if abs(1 - froude_number_2**2) < 0.05:
+              print("Approaching critical flow - GVF integration unstable")
+              break
 
            if water_depth <= 0:
               print("Warning: Water depth is negative. Check input parameters.")
               break
 
+           mean_friction_slope = (friction_slope_1 + friction_slope_2) / 2   
+
+           delta_x = -1 * (energy_2 - energy_1) / (self.slope - mean_friction_slope)  
+
            freeboard = self.max_water_depth - water_depth
+
            total_x += delta_x
 
         print(f"Flow: {flow:.3f} m³/s")
@@ -91,5 +113,5 @@ class Channel:
         print(f"Upstream depth:   {water_depth:.3f} m")
         print(f"Depth increase:   {water_depth - initial_water_depth:.3f} m")
         print(f"Freeboard:        {freeboard:.3f} m")
-        print(f"Upstream Fr:      {froude_number:.3f}")
+        print(f"Upstream Fr:      {froude_number_2:.3f}")
         print("-----------------------------")

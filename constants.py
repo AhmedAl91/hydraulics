@@ -1,5 +1,5 @@
 # Constants
-G = 9.81                # m/s2
+G = 9.807               # m/s2
 
 KINEMATIC_VISCOSITIES = {
     10: 1.310e-6,       # m2/s, @ 10 C
