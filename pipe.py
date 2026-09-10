@@ -6,14 +6,12 @@ import matplotlib.pyplot as plt              # for plotting system curve
 from constants import G, KINEMATIC_VISCOSITY
 
 class Pipe:
-    def __init__(self, id, length, diameter, roughness, from_node, to_node, fittings=None):
+    def __init__(self, id, length, diameter, roughness, flow, fittings=None):
         self.id = id
         self.length = length
         self.diameter = diameter
-        self.roughness = roughness
-
-        self.from_node = from_node
-        self.to_node = to_node
+        self.roughness = roughness 
+        self.flow = flow 
 
         self.fittings = fittings or []
 
@@ -33,7 +31,7 @@ class Pipe:
         if reynolds < 2_300:
             return 64 / reynolds
 
-        return 0.25 / (math.log10( self.roughness / (3.7 * self.diameter) + 5.74 / reynolds**0.9 ) ** 2)
+        return 0.25 / (math.log10(self.roughness / (3.7 * self.diameter) + 5.74 / reynolds**0.9 ) ** 2)
 
     def total_k_values(self):
             return sum(K_VALUES[fitting] for fitting in self.fittings)

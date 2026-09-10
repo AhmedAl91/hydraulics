@@ -2,7 +2,8 @@ import math                                  # for basic mathematic operations
 import matplotlib.pyplot as plt              # for plotting system curve
 
 from pipe import Pipe 
-from channel import Channel 
+from channel import Channel
+from weir import Weir 
 from node import Node 
 from network import Network 
 import system                                # input data
@@ -21,13 +22,21 @@ for channel_data in system.channels_data:
     channel = Channel(**channel_data)
     channels[channel.id] = channel
 
+weirs = {}
+
+for weir_data in system.weirs_data:
+    weir = Weir(**weir_data)
+    weirs[weir.id] = weir
+
 nodes = {}
 
 for node_data in system.nodes_data:
     node = Node(**node_data)
     nodes[node.id] = node
 
-network = Network(nodes = nodes, pipes = pipes, channels = channels)
+components = ... # how to order based on .position property in each system object counting from 1 to N ?
+
+network = Network(nodes, components)
 
 flow_case = "avg"
 
