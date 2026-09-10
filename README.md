@@ -20,7 +20,7 @@ The intent is for the model to work by:
 
 - The Network object calls the method for assessing flow continuity. The continuity equation at each node must resolve as:
 
-  **∑Qin + Qexternal - ∑Qout = 0**
+  **∑Qin - ∑Qout = 0**
 - Where if the result > tolerance then the head losses are re-calculated using an iterative method (presumably bi-section of flows)
 
 
