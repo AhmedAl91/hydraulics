@@ -14,7 +14,7 @@ The intent is for the model to work by:
 
 - Fixed parameters and look-up data exist in constants.py and fittings.py
 
-- The Network object is constructed using the above objects. The appropriate method is called to estimate head loss from node to node. How this is determined requires development, but is currently manually edited in-line and presumably should be passed as an argument.
+- The Network object is constructed using the above objects. The appropriate method is called to estimate head loss from node to node. Calling methods requires development, but is currently manually edited in-line and presumably should be passed as an argument.
 
 
 Actions to develop this model:
