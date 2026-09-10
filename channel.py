@@ -3,9 +3,10 @@ import math                                  # for basic mathematic operations
 from constants import G, KINEMATIC_VISCOSITY
 
 class Channel:
-    def __init__(self, id, length, width, max_depth, mannings_n, slope, flow, downstream_invert, upstream_invert):
-        
+    def __init__(self, id, position, length, width, max_depth, mannings_n, slope, flow, downstream_invert, upstream_invert):
+
         self.id = id
+        self.position = position
         self.length = length
         self.width = width
         self.max_depth = max_depth

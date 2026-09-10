@@ -7,14 +7,13 @@ class Network:
         self.channels = channels
         self.weirs = weirs
         self.downstream_boundary = downstream_boundary
-        # need to check object data class as DownstreamBoundary somehow
-
-        self.components = {**pipes,**channels, **weirs}
 
         self.incoming = {}
         self.outgoing = {}
 
         self.build_connectivity()
+        self.components = {**pipes,**channels, **weirs}
+        self.components = self.order_components()
 
     def build_connectivity(self):
         for node_id in self.nodes:
@@ -25,15 +24,30 @@ class Network:
             self.outgoing[component.from_node].append(component.id)
             self.incoming[component.to_node].append(component.id)
     
+    def order_components(self):
+        positions = [component.position for component in self.components]
+
+        expected = list(range(1, len(self.components) + 1))
+
+        if sorted(positions) != expected:
+            raise ValueError(
+                f"Component positions must be unique and consecutive "
+                f"from 1 to {len(self.components)}. "
+                f"Received: {positions}"
+            )
+
+        return sorted(
+            self.components,
+            key=lambda component: component.position
+        )
+    
     def solve(self):
 
         state = self.downstream_boundary.hydraulic_state()
 
-        ordered_components = self.get_solution_order()
-
         results = {}
 
-        for component in self.ordered_components:
+        for component in self.components:
 
             upstream_state = component.solve_upstream(flow = component.flow, downstream_state = state)
 

@@ -6,12 +6,16 @@ import matplotlib.pyplot as plt              # for plotting system curve
 from constants import G, KINEMATIC_VISCOSITY
 
 class Pipe:
-    def __init__(self, id, length, diameter, roughness, flow, fittings=None):
+    def __init__(self, id, position, length, diameter, roughness, downstream_invert, upstream_invert,  flow, fittings=None):
+
         self.id = id
+        self.position = position
         self.length = length
         self.diameter = diameter
         self.roughness = roughness 
         self.flow = flow 
+        self.downstream_invert = downstream_invert
+        self.upstream_invert = upstream_invert
 
         self.fittings = fittings or []
 
