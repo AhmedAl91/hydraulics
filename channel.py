@@ -42,7 +42,15 @@ class Channel(Conduit):
         return (((flow / width) ** 2) / G) ** (1/3) 
     
     def gvf_profile_by_x(self, flow, available_specific_energy):
-        # Energy available assessment
+        # dy/dx = (Sf - S0) / (1 - Fr**2)
+        # The head (and therefore depth) of free flowing water is proportional to the friction slope (Sf)
+        # which is a measure of head loss per unit distance. It is eased by the physical slope (S0)
+        # and the velocity (inferred through Fr)
+
+        # This method plugs in a small change in length (Δx) to estimate the change in depth (Δy).
+        # It works for rectangular channels and has allowance for tapered widths by re-estimating width, Sf and Fr.
+
+        # Determine downstream depth from specific energy at boundary
         initial_depth = self.downstream_depth_from_energy(flow, available_specific_energy)
         # Iterative calculation to find water depth for given flow
         total_x = 0.0
@@ -96,7 +104,15 @@ class Channel(Conduit):
         return depth - initial_depth
 
     def gvf_profile_by_y(self, flow, available_specific_energy):
-        # Energy available assessment
+        # dy/dx = (Sf - S0) / (1 - Fr**2)
+        # The head (and therefore depth) of free flowing water is proportional to the friction slope (Sf)
+        # which is a measure of head loss per unit distance. It is eased by the physical slope (S0)
+        # and the velocity (inferred through Fr)
+
+        # This method plugs in a small change in depth (Δy) to determine the length (Δx).
+        # It only works for straight lengths of channels, i.e. does not work for pipes nor tapered channels.
+
+        # Determine downstream depth from specific energy at boundary
         initial_depth = self.downstream_depth_from_energy(flow, available_specific_energy)
         # Iterative calculation to find water depth for given flow
         total_x = 0.0
