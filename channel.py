@@ -36,19 +36,21 @@ class Channel(Conduit):
 
     def critical_depth(self, flow, x=0.0):
         # yc = (((Q / W) ** 2) / G) ** (1/3)
-        # Python calls this before calling the Conduit (parent) method
+        # Note on abstraction: python calls this before calling the Conduit (parent) method
         width = self.width(x)
 
         return (((flow / width) ** 2) / G) ** (1/3) 
     
-    def gvf_profile_by_x(self, flow, available_specific_energy):
+    def gvf_profile_by_x(self, flow, available_specific_energy, tolerance=1e-6):
         # dy/dx = (Sf - S0) / (1 - Fr**2)
         # The head (and therefore depth) of free flowing water is proportional to the friction slope (Sf)
         # which is a measure of head loss per unit distance. It is eased by the physical slope (S0)
-        # and the velocity (inferred through Fr)
+        # and the velocity (inferred through Fr).
 
-        # This method plugs in a small change in length (Δx) to estimate the change in depth (Δy).
+        # This method plugs in a small change in length (Δx) to estimate the new upstream depth (y).
         # It works for rectangular channels and has allowance for tapered widths by re-estimating width, Sf and Fr.
+        # Fixed-point iteration is used to estimate a mean gradient across the downstream and upstream 
+        # hydraulic states to determine the upstream state.
 
         # Determine downstream depth from specific energy at boundary
         initial_depth = self.downstream_depth_from_energy(flow, available_specific_energy)
@@ -56,11 +58,6 @@ class Channel(Conduit):
         total_x = 0.0
         delta_x = self.length * 1e-4
         depth = initial_depth
-
-        def width_at_position(x):
-            fraction = x / self.length
-            width = self.downstream_width + fraction * (self.upstream_width - self.downstream_width)
-            return width
         
         # This is iterating from the downstream end of the channel to the upstream end, 
         # calculating the water depth at each step based on the friction slope and Froude number. 
@@ -68,21 +65,43 @@ class Channel(Conduit):
         # If the water depth becomes negative, a warning is printed, and the loop breaks.
         # Finally, it prints the calculated water depth, the freeboard avaialable, and the Froude number.
         while total_x < self.length:
-            width_down = width_at_position(total_x)
-            x_up = total_x + delta_x
-            width_up = width_at_position(x_up)
-            froude_down = self.froude_number(flow, depth, width_down)
-            friction_slope = self.manning_friction_slope(flow, depth, width_up)
+            x_down = total_x
+            # Prevent overshooting
+            x_up = min(total_x + delta_x, self.length)
+            dx = x_up - x_down  
 
-            delta_y = ((friction_slope - self.slope) / (1 - froude_down**2)) * delta_x
-            depth += delta_y
-            froude_up = self.froude_number(flow, depth, width_up)
+            # Define the downstream hydraulic state
+            froude_down = self.froude_number(flow, depth, x_down)
+            friction_slope_down = self.manning_friction_slope(flow, depth, x_down)
 
-            total_x += delta_x
-
-            if abs(1 - froude_up**2) < 0.05:
+            if abs(1 - froude_down**2) < 0.05:
                 print("Approaching critical flow - GVF integration unstable")
                 break
+
+            # Estimate the upstream hydraulic state
+            gradient_down = (friction_slope_down - self.slope) / (1 - froude_down**2)
+            trial_depth = depth + gradient_down * delta_x
+
+            for _ in range(20):
+                froude_up = self.froude_number(flow, depth, x_up)
+                friction_slope_up = self.manning_friction_slope(flow, trial_depth, x_up)
+
+                if abs(1 - froude_up**2) < 0.05:
+                    print("Approaching critical flow - GVF integration unstable")
+                    break
+                
+                gradient_up = (friction_slope_up - self.slope) / (1 - froude_up**2)
+                mean_gradient = (gradient_down + gradient_up) / 2
+                corrected_depth = depth + mean_gradient * delta_x
+
+                if abs(corrected_depth - trial_depth) < tolerance:
+                    trial_depth = corrected_depth
+                    break 
+                
+                trial_depth = corrected_depth
+            
+            depth = trial_depth
+            total_x = x_up
 
             if depth <= 0:
                 print("Warning: Water depth is negative. Check input parameters.")
@@ -109,8 +128,14 @@ class Channel(Conduit):
         # which is a measure of head loss per unit distance. It is eased by the physical slope (S0)
         # and the velocity (inferred through Fr)
 
-        # This method plugs in a small change in depth (Δy) to determine the length (Δx).
-        # It only works for straight lengths of channels, i.e. does not work for pipes nor tapered channels.
+        # This method plugs in a small change in depth (Δy) to determine the change in length (Δx).
+        # It only works for straight lengths of channels, i.e. does not work for pipes nor tapered channels 
+        # as they have intermittent / variable losses as a function of x (fittings, or change in width).
+
+        # The direct step method is derived from literature, where the downstream hydraulic state is defined,
+        # the gradient backing upstream is estimated, and then the upstream hydraulic state is derived.
+        # Interpolation is required afterwards, as small changes in y can result in large x changes, 
+        # and can overshoot. 
 
         # Determine downstream depth from specific energy at boundary
         initial_depth = self.downstream_depth_from_energy(flow, available_specific_energy)
@@ -120,14 +145,15 @@ class Channel(Conduit):
         depth = initial_depth
         
         def direct_step_method(flow, depth, delta_y): 
-
+            # Define the downstream hydraulic state
             energy_down = self.specific_energy(flow, depth)
             friction_slope_down = self.manning_friction_slope(flow, depth,)
             froude_down = self.froude_number(flow, depth)
 
-            gvf_gradient_upstream = (friction_slope_down - self.slope) / (1 - froude_down**2)
+            # Estimate the upstream hydraulic state
+            gradient_down = (friction_slope_down - self.slope) / (1 - froude_down**2)
 
-            if gvf_gradient_upstream > 0:
+            if gradient_down > 0:
                 trial_depth = depth + delta_y
             else:
                 trial_depth = depth - delta_y 
@@ -135,6 +161,7 @@ class Channel(Conduit):
             if trial_depth <= 0:
                 raise ValueError(f"{self.id}: Trial depth {trial_depth:.6f} m is non-positive. Check input parameters.")
 
+            # Determine the upstream hydraulic sate
             energy_up = self.specific_energy(flow, trial_depth)
             friction_slope_up = self.manning_friction_slope(flow, trial_depth)
             mean_friction_slope = (friction_slope_down + friction_slope_up) / 2
