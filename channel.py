@@ -1,112 +1,46 @@
 import math                                  # for basic mathematic operations
+from conduit import Conduit
+from constants import G, NU
 
-from constants import G, KINEMATIC_VISCOSITY
+class Channel(Conduit):
+    def __init__(self, downstream_width, upstream_width, **kwargs):
 
-class Channel:
-    def __init__(self, id, position, length, downstream_width, upstream_width, max_depth, mannings_n, flow, downstream_invert, upstream_invert, slope=0.0):
+        super().__init__(**kwargs)
 
-        self.id = id
-        self.position = position
-        self.length = length
-        self.downstream_width = downstream_width 
-        self.upstream_width  = upstream_width  
-        self.max_depth = max_depth
-        self.mannings_n = mannings_n
-        self.slope = slope
-        self.downstream_invert = downstream_invert
-        self.upstream_invert = upstream_invert
+        self.downstream_width = downstream_width
+        self.upstream_width = upstream_width
 
-        self.flow = flow 
+    # Reactangular channel geometry
 
-    def area(self, depth, width=None):
-        if width is None:
-            width = self.downstream_width
+    def width(self, x=0.0):
+
+        fraction = x / self.length
+
+        return self.downstream_width + fraction * (self.upstream_width - self.downstream_width)
+
+    def area(self, depth, x=0.0):
+
+        width = self.width(x)
+
         return width * depth
 
-    def wetted_perimeter(self, depth, width=None):
-        if width is None:
-            width = self.downstream_width
-        return width + 2 * depth
+    def top_width(self, depth, x=0.0):
 
-    def hydraulic_radius(self, depth, width=None):
-        if width is None:
-            width = self.downstream_width
-        return self.area(depth, width) / self.wetted_perimeter(depth, width)
+        return self.width(x)            # To ensure consistent interface with Pipes
 
-    def velocity(self, flow, depth, width=None):
-        return flow / self.area(depth, width)
+    def wetted_perimeter(self, depth, x=0.0):
 
-    def froude_number(self, flow, depth, width=None):
-        velocity = self.velocity(flow, depth, width)
+        width = self.width(x)
 
-        return velocity / math.sqrt(G * depth)
+        return (2 * depth) + width
 
-    def manning_friction_slope(self, flow, depth, width=None):
-       # Rectangular channel geometry
-       velocity = self.velocity(flow, depth, width)                          # m/s
-       hydraulic_radius = self.hydraulic_radius(depth, width)                 # m
+    def critical_depth(self, flow, x=0.0):
+        # yc = (((Q / W) ** 2) / G) ** (1/3)
+        # Python calls this before calling the Conduit (parent) method
+        width = self.width(x)
 
-       # Manning friction slope
-       return (velocity * self.mannings_n / hydraulic_radius**(2/3))**2             # dimensionless
-
-    def critical_depth(self, flow, width=None):
-        if width is None:
-            width = self.downstream_width
-        return (((flow / width)**2) / G) ** (1/3)
+        return (((flow / width) ** 2) / G) ** (1/3) 
     
-    def specific_energy(self, flow, depth, width=None):
-        if width is None:
-            width = self.downstream_width
-        return ((self.velocity(flow, depth, width)**2) / (2 * G)) + depth
-    
-    def downstream_depth_from_energy(self, flow, available_energy):
-        yc = self.critical_depth(flow)
-        Ec = self.specific_energy(flow, yc)
-
-        if available_energy <= Ec:
-            return yc
-        return self.solve_depth_from_energy(flow = flow, target_energy = available_energy, lower_bound = yc)
-
-    def solve_depth_from_energy(self, flow, target_energy, lower_bound, tolerance=1e-6, max_iterations=100):
-        
-        def residual_energy(depth):
-            return self.specific_energy(flow, depth) - target_energy
-        
-        depth_low = lower_bound    # minimum energy = critical depth 
-        depth_high = target_energy # large depth energy ~= depth
-
-        while residual_energy(depth_high) < 0:
-            depth_high *= 2
-
-        # Iterative bisection 
-        for _ in range(max_iterations):
-            depth_mid = 0.5 * (depth_low + depth_high)
-            error_mid = residual_energy(depth_mid)
-
-            if abs(error_mid) < tolerance:
-                return depth_mid
-            
-            if error_mid < 0:
-                depth_low = depth_mid
-            else:
-                depth_high = depth_mid
-
-        return 0.5 * (depth_low + depth_high)
-
-    def solve_upstream(self, flow, downstream_state):
-        # Energy available assessment
-        downstream_specific_energy = downstream_state.energy_level - self.downstream_invert
-        depth_critical = self.critical_depth(flow)
-
-        if self.downstream_width == self.upstream_width:
-            # Δy is set → solve Δx
-            depth_change = self.gvf_profile_by_y(flow, downstream_specific_energy)
-        else:
-            # Δx known → geometry known → solve y_up
-            depth_change = self.gvf_profile_by_x(flow, downstream_specific_energy)
-
-        return depth_change, depth_critical
-
     def gvf_profile_by_x(self, flow, available_specific_energy):
         # Energy available assessment
         initial_depth = self.downstream_depth_from_energy(flow, available_specific_energy)
@@ -180,11 +114,9 @@ class Channel:
             if gvf_gradient_upstream > 0:
                 trial_depth = depth + delta_y
             else:
-                actual_delta_y  = min(delta_y, depth * 0.5)
-                trial_depth = depth - actual_delta_y 
+                trial_depth = depth - delta_y 
 
             if trial_depth <= 0:
-                # this error pings on first loop, and the self. properties are not passing
                 raise ValueError(f"{self.id}: Trial depth {trial_depth:.6f} m is non-positive. Check input parameters.")
 
             energy_up = self.specific_energy(flow, trial_depth)
@@ -208,7 +140,7 @@ class Channel:
             if delta_x <= 0:
                 raise ValueError(f"{self.id}: Direct-step calculation produced dx={delta_x:.6f} m, which is non-positive. Check input parameters.")
 
-            # Interpolate to ensure we do not exceed the channel length
+            # As delta_x could be very large: Interpolate to ensure we do not exceed the channel length
             if total_x + delta_x > self.length:
                 remaining_x = self.length - total_x
                 fraction = remaining_x / delta_x
@@ -244,5 +176,3 @@ class Channel:
         print(f"Upstream Fr:      {froude_up:.3f}")
         print("-----------------------------")
         return depth - initial_depth
-
-    

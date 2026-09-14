@@ -3,26 +3,24 @@ from fittings import K_VALUES                # resistance coefficient library
 import math                                  # for basic mathematic operations
 import matplotlib.pyplot as plt              # for plotting system curve
 
-from constants import G, KINEMATIC_VISCOSITY
+from constants import G, NU
 
 class Pipe:
-    def __init__(self, id, position, length, diameter, roughness, downstream_invert, upstream_invert,  flow, fittings=None):
+    def __init__(self, diameter, fittings=None, **kwargs):
+        
+        super().__init__(**kwargs)
 
-        self.id = id
-        self.position = position
-        self.length = length
         self.diameter = diameter
-        self.roughness = roughness 
-        self.flow = flow 
-        self.downstream_invert = downstream_invert
-        self.upstream_invert = upstream_invert
+        self.fittings = fittings or []
 
         self.fittings = fittings or []
 
-    def velocity(self, flow):
-        area = math.pi * self.diameter**2 / 4
-        return flow / area
+    # Once depth >= diameter and it becomes surcharged/pressurised
 
+    def area(self, depth):
+        return math.pi * self.diameter**2 / 4
+
+## THIS PART HERE
     def friction_factor(self, flow):
         if flow == 0:
             return 0.0
