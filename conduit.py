@@ -111,7 +111,7 @@ class Conduit:
 
         return 0.5 * (depth_low + depth_high)
 
-    def critical_depth(self, flow,x=0.0, tolerance=1e-6, max_iterations=100):
+    def critical_depth(self, flow, x=0.0, tolerance=1e-6, max_iterations=100):
         # Solve Fr = 1 using bisection
         # Froude decreases as depth increases (opposite direction to specific energy)
 
@@ -137,17 +137,3 @@ class Conduit:
                 depth_high  = depth_mid
 
         return 0.5 * (depth_low + depth_high)
-
-    def solve_upstream(self, flow, downstream_state):
-        # Assess the available energy
-        downstream_specific_energy = downstream_state.energy_level - self.downstream_invert
-        depth_critical = self.critical_depth(flow)
-
-        if self.downstream_width == self.upstream_width:
-            # Δy is set → solve Δx
-            depth_change = self.gvf_profile_by_y(flow, downstream_specific_energy)
-        else:
-            # Δx known → geometry known → solve y_up
-            depth_change = self.gvf_profile_by_x(flow, downstream_specific_energy)
-
-        return depth_change, depth_critical

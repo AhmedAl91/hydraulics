@@ -5,79 +5,106 @@ import matplotlib.pyplot as plt              # for plotting system curve
 
 from constants import G, NU
 
-class Pipe:
+class Pipe(Conduit):
     def __init__(self, diameter, fittings=None, **kwargs):
         
         super().__init__(**kwargs)
 
         self.diameter = diameter
-        self.fittings = fittings or []
+        self.radius = diameter / 2
 
         self.fittings = fittings or []
 
-    # Once depth >= diameter and it becomes surcharged/pressurised
+    def theta(self, depth):
+        if depth <= 0:
+            return 0.0
+        
+        if depth >= self.diameter:
+            return 2 * math.pi
+        
+        return 2 * math.acos((self.radius - depth) / self.radius)
 
-    def area(self, depth):
-        return math.pi * self.diameter**2 / 4
+    def area(self, depth, x=0.0):
+        theta = self.theta(depth)
 
-## THIS PART HERE
-    def friction_factor(self, flow):
+        return self.radius**2 / 2 * (theta - math.sin(theta))
+
+    def wetted_perimeter(self, depth, x=0.0):
+        theta = self.theta(depth)
+
+        return self.radius * theta
+
+    def top_width(self, depth, x=0.0):
+        theta = self.theta(depth)
+
+        return 2 * self.radius * math.sin(theta / 2)
+
+    def hydraulic_diameter(self, depth, x=0.0):
+        return 4 * self.hydraulic_radius(depth, x)
+
+    def friction_factor_filled(self, flow, x=0.0):
         if flow == 0:
             return 0.0
 
-        v = self.velocity(flow)
+        V = self.velocity(flow, depth, x)
 
-        reynolds = (v * self.diameter / KINEMATIC_VISCOSITY)
+        Re = V * self.diameter / NU
+
 		# Darcy friction factor using Swamee-Jain approximation
-		# Laminar flow
-        if reynolds < 2_300:
-            return 64 / reynolds
 
-        return 0.25 / (math.log10(self.roughness / (3.7 * self.diameter) + 5.74 / reynolds**0.9 ) ** 2)
+		# Laminar flow
+        if Re < 2_300:
+            return 64 / Re
+
+        # Turbulent
+        return 0.25 / (math.log10(self.roughness / (3.7 * self.diameter) + 5.74 / Re**0.9 ) ** 2)
 
     def total_k_values(self):
-            return sum(K_VALUES[fitting] for fitting in self.fittings)
+        return sum(K_VALUES[fitting] for fitting in self.fittings)
 
-    def headloss_full(self, flow):
-        v = self.velocity(flow)
-        f = self.friction_factor(flow)
-        k = self.total_k_values()
+    def headloss_filled(self, flow):
+        depth = self.diameter
 
-        friction_loss = (f * self.length / self.diameter * v**2 / (2 * G))
+        V = self.velocity(flow, depth)
+        f = self.friction_factor_filled(flow, depth)
+        K = self.total_k_values()
 
-        fittings_loss = (k * v**2 / (2 * G))
+        friction_loss = f * self.length / self.diameter * V**2 / (2 * G)
+
+        fittings_loss = K * V**2 / (2 * G)
 
         return friction_loss + fittings_loss
 
-    def headloss_partial(self, flow):
+    def gvf_profile_by_x(self, flow):
+        # GVF solver by dx with intermittent estimates of fittings??
         pass
 
-    def plot_system_curves(self, nodes, flow):
-        upstream_node = nodes[self.from_node]
-        downstream_node = nodes[self.to_node]
-        available_head = upstream_node.aod - downstream_node.aod
+    
+    def solve_upstream(self, flow, downstream_state):
+        # Downstream hydraulic condition
+        crown = self.downstream_invert + self.diameter
+        velocity_head = downstream_state.velocity ** 2 / (2 * G)
+        hydraulic_grade = downstream_state.energy_level - velocity_head
+        depth_critical = self.critical_depth(flow)
 
-        flows = [q / 1000 for q in range(1, flow, 1)]                       # m3/s
-        
-        losses = [self.headloss_full(q) for q in flows]
-        
-        plt.plot(flows, losses, label="System resistance")
-    
-        plt.xlabel("Flow (m³/s)")
-        plt.ylabel("Headloss (m)")
-        # Intersect system curve with available head
-        plt.axhline(
-            y=available_head,
-            label="Available head (m)"
-        )
-        plt.title("System Resistance Curve")
-        plt.grid()
-        plt.legend()
-    
-        plt.savefig(
-        f"outputs/system_curve_{self.id}.png",
-        dpi=150,
-        bbox_inches="tight"
-        )
-    
-        plt.show()
+        if hydraulic_grade >= crown:
+            # Pipe is surcharged/pressurised
+            head_loss = self.headloss_filled(flow)
+            hydraulic_result = HydraulicResult(
+                regime="pressurised",
+                upstream_depth=self.diameter,
+                upstream_energy_level=downstream_state.energy_level + head_loss,
+                upstream_velocity=self.velocity(flow, self.diameter),
+                head_loss=head_loss,
+            )
+        else:
+            # Solve GVF by Δx
+            upstream_depth, upstream_energy_level, upstream_velocity = self.gvf_profile_by_x(flow, downstream_specific_energy)
+            hydraulic_result = HydraulicResult(
+                regime="open_channel",
+                upstream_depth=upstream_depth,
+                upstream_energy_level=upstream_energy_level,
+                upstream_velocity=upstream_velocity,
+            )
+
+        return hydraulic_result

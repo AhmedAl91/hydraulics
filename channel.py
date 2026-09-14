@@ -40,6 +40,26 @@ class Channel(Conduit):
         width = self.width(x)
 
         return (((flow / width) ** 2) / G) ** (1/3) 
+
+    def solve_upstream(self, flow, downstream_state):
+        # Assess the available energy
+        downstream_specific_energy = downstream_state.energy_level - self.downstream_invert
+
+        if self.downstream_width == self.upstream_width:
+            # Δy is set → solve Δx
+            upstream_depth, upstream_energy_level, upstream_velocity = self.gvf_profile_by_y(flow, downstream_specific_energy)
+        else:
+            # Δx known → geometry known → solve y_up
+            upstream_depth, upstream_energy_level, upstream_velocity = self.gvf_profile_by_x(flow, downstream_specific_energy)
+
+        hydraulic_result = HydraulicResult(
+            regime="open_channel",
+            upstream_depth=upstream_depth,
+            upstream_energy_level=upstream_energy_level,
+            upstream_velocity=upstream_velocity,
+        )
+
+        return hydraulic_result
     
     def gvf_profile_by_x(self, flow, available_specific_energy, tolerance=1e-6):
         # dy/dx = (Sf - S0) / (1 - Fr**2)
@@ -120,7 +140,11 @@ class Channel(Conduit):
         print(f"Freeboard:        {freeboard:.3f} m")
         print(f"Upstream Fr:      {froude_up:.3f}")
         print("-----------------------------")
-        return depth - initial_depth
+
+        energy_level = self.specific_energy(flow, depth)
+        velocity = self.velocity(flow, depth)
+
+        return depth, energy_level, velocity
 
     def gvf_profile_by_y(self, flow, available_specific_energy):
         # dy/dx = (Sf - S0) / (1 - Fr**2)
@@ -218,4 +242,8 @@ class Channel(Conduit):
         print(f"Freeboard:        {freeboard:.3f} m")
         print(f"Upstream Fr:      {froude_up:.3f}")
         print("-----------------------------")
-        return depth - initial_depth
+
+        energy_level = self.specific_energy(flow, depth)
+        velocity = self.velocity(flow, depth)
+
+        return depth, energy_level, velocity
