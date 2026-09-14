@@ -2,6 +2,7 @@
 from fittings import K_VALUES                # resistance coefficient library
 import math                                  # for basic mathematic operations
 import matplotlib.pyplot as plt              # for plotting system curve
+from dataclasses import dataclass
 
 from constants import G, NU
 
@@ -91,20 +92,24 @@ class Pipe(Conduit):
             # Pipe is surcharged/pressurised
             head_loss = self.headloss_filled(flow)
             hydraulic_result = HydraulicResult(
-                regime="pressurised",
-                upstream_depth=self.diameter,
-                upstream_energy_level=downstream_state.energy_level + head_loss,
-                upstream_velocity=self.velocity(flow, self.diameter),
+                upstream_state=HydraulicState(
+                    regime="pressurised",
+                    upstream_depth=self.diameter,
+                    upstream_energy_level=downstream_state.energy_level + head_loss,
+                    upstream_velocity=self.velocity(flow, self.diameter),
+                ),
                 head_loss=head_loss,
             )
         else:
             # Solve GVF by Δx
             upstream_depth, upstream_energy_level, upstream_velocity = self.gvf_profile_by_x(flow, downstream_specific_energy)
             hydraulic_result = HydraulicResult(
-                regime="open_channel",
-                upstream_depth=upstream_depth,
-                upstream_energy_level=upstream_energy_level,
-                upstream_velocity=upstream_velocity,
+                upstream_state=HydraulicState(
+                    regime="open_channel",
+                    upstream_depth=upstream_depth,
+                    upstream_energy_level=upstream_energy_level,
+                    upstream_velocity=upstream_velocity,
+                )
             )
 
         return hydraulic_result

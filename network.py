@@ -1,4 +1,4 @@
-from data_classes import dataclass
+from dataclasses import dataclass
 
 class Network:
     def __init__(self, nodes, pipes, channels, weirs, downstream_boundary):
@@ -8,13 +8,16 @@ class Network:
         self.weirs = weirs
         self.downstream_boundary = downstream_boundary
 
+        self.components = {**pipes,**channels, **weirs}
+
         self.incoming = {}
         self.outgoing = {}
 
         self.build_connectivity()
-        self.components = {**pipes,**channels, **weirs}
-        self.components = self.order_components()
 
+        self.ordered_components  = self.order_components()
+
+    # For junction based network evaluation
     def build_connectivity(self):
         for node_id in self.nodes:
             self.incoming[node_id] = []
@@ -24,36 +27,39 @@ class Network:
             self.outgoing[component.from_node].append(component.id)
             self.incoming[component.to_node].append(component.id)
     
+    # For serial network evaluation
     def order_components(self):
-        positions = [component.position for component in self.components]
+        components = list(self.components.values())
+
+        positions = [component.position for component in components]
 
         expected = list(range(1, len(self.components) + 1))
 
         if sorted(positions) != expected:
             raise ValueError(
                 f"Component positions must be unique and consecutive "
-                f"from 1 to {len(self.components)}. "
+                f"from 1 to {len(components)}. "
                 f"Received: {positions}"
             )
 
         return sorted(
-            self.components,
+            components,
             key=lambda component: component.position
         )
     
     def solve(self):
 
-        state = self.downstream_boundary.hydraulic_state()
+        downstream_state = self.downstream_boundary.hydraulic_state()
 
         results = {}
 
-        for component in self.components:
+        for component in self.ordered_components:
 
-            upstream_state = component.solve_upstream(flow = component.flow, downstream_state = state)
+            result = component.solve_upstream(flow = component.flow, downstream_state = downstream_state)
 
-            results[component.id] = upstream_state
+            results[component.id] = result
 
-            downstream_state = upstream_state
+            downstream_state = result.upstream_state
 
         return results
     

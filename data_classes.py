@@ -8,10 +8,7 @@ class HydraulicState:
 
 @dataclass
 class HydraulicResult:
-    regime: str | None = None
-    upstream_depth: float | None = None
-    upstream_energy_level: float | None = None
-    upstream_velocity: float | None = None
+    upstream_state: HydraulicState
     head_loss: float | None = None
 
 @dataclass

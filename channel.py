@@ -1,6 +1,7 @@
 import math                                  # for basic mathematic operations
 from conduit import Conduit
 from constants import G, NU
+from dataclasses import dataclass
 
 class Channel(Conduit):
     def __init__(self, downstream_width, upstream_width, **kwargs):
@@ -53,10 +54,12 @@ class Channel(Conduit):
             upstream_depth, upstream_energy_level, upstream_velocity = self.gvf_profile_by_x(flow, downstream_specific_energy)
 
         hydraulic_result = HydraulicResult(
-            regime="open_channel",
-            upstream_depth=upstream_depth,
-            upstream_energy_level=upstream_energy_level,
-            upstream_velocity=upstream_velocity,
+            upstream_state=HydraulicState(
+                regime="open_channel",
+                upstream_depth=upstream_depth,
+                upstream_energy_level=upstream_energy_level,
+                upstream_velocity=upstream_velocity,
+            )
         )
 
         return hydraulic_result

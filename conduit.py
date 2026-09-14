@@ -1,5 +1,6 @@
 import math                                  # for basic mathematic operations
 from constants import G, NU
+from dataclasses import dataclass
 
 class Conduit:
     def __init__(self, id, position, length, downstream_width, upstream_width, max_depth, mannings_n, flow, downstream_invert, upstream_invert, slope=0.0):
