@@ -1,7 +1,10 @@
 
 import math
 from constants import G, KINEMATIC_VISCOSITY
+from conduit import Conduit
+from pipe import Pipe
 from channel import Channel
+from weir import Weir
 
 # def manning_friction_slope(flow, channel_width, water_depth, mannings_n):
 #     # Calculate friction slope using Manning's equation
