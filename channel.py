@@ -1,7 +1,7 @@
 import math                                  # for basic mathematic operations
 from conduit import Conduit
 from constants import G, NU
-from dataclasses import dataclass
+from data_classes import HydraulicState, HydraulicResult, DownstreamBoundary
 
 class Channel(Conduit):
     def __init__(self, downstream_width, upstream_width, **kwargs):
@@ -11,7 +11,7 @@ class Channel(Conduit):
         self.downstream_width = downstream_width
         self.upstream_width = upstream_width
 
-    # Reactangular channel geometry
+    # Rectangular channel geometry
 
     def width(self, x=0.0):
 
@@ -44,22 +44,24 @@ class Channel(Conduit):
 
     def solve_upstream(self, flow, downstream_state):
         # Assess the available energy
-        downstream_specific_energy = downstream_state.energy_level - self.downstream_invert
+        downstream_specific_energy = downstream_state.EGL - self.downstream_invert
 
         if self.downstream_width == self.upstream_width:
             # Δy is set → solve Δx
-            upstream_depth, upstream_energy_level, upstream_velocity = self.gvf_profile_by_y(flow, downstream_specific_energy)
+            upstream_depth, upstream_energy_grade, upstream_hydraulic_grade, upstream_velocity, head_loss = self.gvf_profile_by_y(flow, downstream_specific_energy)
         else:
             # Δx known → geometry known → solve y_up
-            upstream_depth, upstream_energy_level, upstream_velocity = self.gvf_profile_by_x(flow, downstream_specific_energy)
+            upstream_depth, upstream_energy_grade, upstream_hydraulic_grade, upstream_velocity, head_loss = self.gvf_profile_by_x(flow, downstream_specific_energy)
 
         hydraulic_result = HydraulicResult(
             upstream_state=HydraulicState(
                 regime="open_channel",
-                upstream_depth=upstream_depth,
-                upstream_energy_level=upstream_energy_level,
-                upstream_velocity=upstream_velocity,
-            )
+                depth=upstream_depth,
+                energy_grade=upstream_energy_grade,
+                hydraulic_grade=upstream_hydraulic_grade,
+                velocity=upstream_velocity,
+            ),
+            head_loss=head_loss
         )
 
         return hydraulic_result
@@ -144,10 +146,12 @@ class Channel(Conduit):
         print(f"Upstream Fr:      {froude_up:.3f}")
         print("-----------------------------")
 
-        energy_level = self.specific_energy(flow, depth)
-        velocity = self.velocity(flow, depth)
+        energy_grade = self.specific_energy(flow, depth, self.length) + self.upstream_invert
+        hydraulic_grade = depth + self.upstream_invert
+        velocity = self.velocity(flow, depth, self.length)
+        head_loss = self.specific_energy(flow, depth, self.length) + self.upstream_invert - self.specific_energy(flow, initial_depth, 0.0) - self.downstream_invert 
 
-        return depth, energy_level, velocity
+        return depth, energy_grade, velocity, hydraulic_grade, head_loss
 
     def gvf_profile_by_y(self, flow, available_specific_energy):
         # dy/dx = (Sf - S0) / (1 - Fr**2)
@@ -246,7 +250,9 @@ class Channel(Conduit):
         print(f"Upstream Fr:      {froude_up:.3f}")
         print("-----------------------------")
 
-        energy_level = self.specific_energy(flow, depth)
+        energy_grade = self.specific_energy(flow, depth) + self.upstream_invert
+        hydraulic_grade = depth + self.upstream_invert
         velocity = self.velocity(flow, depth)
+        head_loss = self.specific_energy(flow, depth) + self.upstream_invert - self.specific_energy(flow, initial_depth) - self.downstream_invert 
 
-        return depth, energy_level, velocity
+        return depth, energy_grade, velocity, hydraulic_grade, head_loss

@@ -1,9 +1,9 @@
 import math                                  # for basic mathematic operations
 from constants import G, NU
-from dataclasses import dataclass
+from data_classes import HydraulicState, HydraulicResult, DownstreamBoundary
 
 class Conduit:
-    def __init__(self, id, position, length, downstream_width, upstream_width, max_depth, mannings_n, flow, downstream_invert, upstream_invert, slope=0.0):
+    def __init__(self, id, position, downstream_width, upstream_width, flow, downstream_invert, upstream_invert, max_depth=0.0, mannings_n=0.0, length=0.0, slope=0.0):
 
         self.id = id
         self.position = position

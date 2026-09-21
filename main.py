@@ -1,6 +1,8 @@
 import math                                  # for basic mathematic operations
-import matplotlib.pyplot as plt              # for plotting system curve
+# import matplotlib.pyplot as plt              # for plotting system curve
+from data_classes import HydraulicState, HydraulicResult, DownstreamBoundary
 
+from conduit import Conduit
 from pipe import Pipe 
 from channel import Channel
 from weir import Weir 
@@ -8,6 +10,9 @@ from node import Node
 from network import Network 
 import system                                # input data
 
+
+# Define downstream boundary
+downstream_boundary = DownstreamBoundary(**system.downstream_boundary_data)
 
 # Lookup dictionaries of all objects
 pipes = {}
@@ -34,7 +39,7 @@ for node_data in system.nodes_data:
     node = Node(**node_data)
     nodes[node.id] = node
 
-network = Network(nodes = nodes, pipes = pipes, channels = channels, weirs = weirs, downstream_boundary = system.downstream_boundary)
+network = Network(nodes=nodes, pipes=pipes, channels=channels, weirs=weirs, downstream_boundary=downstream_boundary)
 
 network.solve()
-network.check_continuity()
+# network.check_continuity()

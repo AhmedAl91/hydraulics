@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from data_classes import HydraulicState, HydraulicResult, DownstreamBoundary
 
 class Network:
     def __init__(self, nodes, pipes, channels, weirs, downstream_boundary):
@@ -13,9 +13,9 @@ class Network:
         self.incoming = {}
         self.outgoing = {}
 
-        self.build_connectivity()
+        # self.build_connectivity()
 
-        self.ordered_components  = self.order_components()
+        self.ordered_components = self.order_components()
 
     # For junction based network evaluation
     def build_connectivity(self):

@@ -1,53 +1,27 @@
 # Raw data, taken from user input API
-pipes_data = [
+downstream_boundary_data = {
+    "kind": "known_water_level",
+    "elevation": 20.0,
+    "velocity": 0.0,
+}
+
+pipes_data = []
+
+channels_data = []
+
+weirs_data = [
   {
-    "id": "P01",
-    "length": 100,
-    "diameter": 0.6,
-    "roughness": 0.03,
-    "from_node": "N01",
-    "to_node": "N02",
-    "fittings": ["pipe_bend_90_degrees_short", "pipe_entry_into_manhole", "pipe_exit_into_manhole"]
-  },
-  {
-    "id": "P02",
-    "length": 100,
-    "diameter": 0.6,
-    "roughness": 0.03,
-    "from_node": "N02",
-    "to_node": "N03",
-    "fittings": ["pipe_bend_90_degrees_short", "pipe_entry_into_manhole", "pipe_exit_into_manhole"]
+    "id": "storm_overflow_4",
+    "Cd": 0.60,
+    "weir_type": "thin_plate",
+    "position": 1,
+    "length" : 0.0,
+    "downstream_width": 7.5,
+    "upstream_width": 7.5,
+    "downstream_invert" : 25.10,
+    "upstream_invert": 25.10,
+    "flow": 0.084,
   },
 ]
 
-channels_data = [
-  {
-    "id": "C01",
-    "length": 8.06,						# m
-    "width": 0.600,						# m
-    "mannings_n": 0.018,				# dimensionless
-    "max_water_depth": 26.175 - 25.600,	# m
-    "slope": 0.0,						# m/m
-    "from_node": "N02",
-    "to_node": "N04",
-  },
-]
-
-nodes_data = [
-    {
-        "id": "N01",
-        "aod": 26.175,
-    },
-    {
-        "id": "N02",
-        "aod": 25.600
-    },
-    {
-        "id": "N03",
-        "aod": 25.100
-    },
-    {
-        "id": "N04",
-        "aod": 24.800
-    },
-]
+nodes_data = []

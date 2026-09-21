@@ -1,8 +1,9 @@
 
 from fittings import K_VALUES                # resistance coefficient library
 import math                                  # for basic mathematic operations
-import matplotlib.pyplot as plt              # for plotting system curve
-from dataclasses import dataclass
+# import matplotlib.pyplot as plt              # for plotting system curve
+from conduit import Conduit
+from data_classes import HydraulicState, HydraulicResult, DownstreamBoundary
 
 from constants import G, NU
 
@@ -85,7 +86,7 @@ class Pipe(Conduit):
         # Downstream hydraulic condition
         crown = self.downstream_invert + self.diameter
         velocity_head = downstream_state.velocity ** 2 / (2 * G)
-        hydraulic_grade = downstream_state.energy_level - velocity_head
+        hydraulic_grade = downstream_state.energy_grade - velocity_head
         depth_critical = self.critical_depth(flow)
 
         if hydraulic_grade >= crown:
@@ -94,22 +95,27 @@ class Pipe(Conduit):
             hydraulic_result = HydraulicResult(
                 upstream_state=HydraulicState(
                     regime="pressurised",
-                    upstream_depth=self.diameter,
-                    upstream_energy_level=downstream_state.energy_level + head_loss,
-                    upstream_velocity=self.velocity(flow, self.diameter),
+                    depth=self.diameter,
+                    energy_grade=downstream_state.energy_grade + head_loss,
+                    hydraulic_grade=self.diameter + self.upstream_invert,
+                    velocity=self.velocity(flow, self.diameter),
                 ),
                 head_loss=head_loss,
             )
         else:
             # Solve GVF by Δx
-            upstream_depth, upstream_energy_level, upstream_velocity = self.gvf_profile_by_x(flow, downstream_specific_energy)
+            # Assess the available energy
+            downstream_specific_energy = downstream_state.energy_grade - self.downstream_invert
+            upstream_depth, upstream_energy_grade, upstream_hydraulic_grade, upstream_velocity, head_loss = self.gvf_profile_by_x(flow, downstream_specific_energy)
             hydraulic_result = HydraulicResult(
                 upstream_state=HydraulicState(
                     regime="open_channel",
-                    upstream_depth=upstream_depth,
-                    upstream_energy_level=upstream_energy_level,
-                    upstream_velocity=upstream_velocity,
-                )
+                    depth=upstream_depth,
+                    energy_grade=upstream_energy_grade,
+                    hydraulic_grade=upstream_hydraulic_grade,
+                    velocity=upstream_velocity,
+                ),
+                head_loss=head_loss,
             )
 
         return hydraulic_result

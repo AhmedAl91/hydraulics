@@ -1,6 +1,6 @@
 import math                                  # for basic mathematic operations
 
-from constants import G, KINEMATIC_VISCOSITY
+from constants import G, NU
 
 class Node:
     def __init__(self, id, aod=None, fixed_head=None, node_type="junction",):
