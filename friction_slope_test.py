@@ -1,6 +1,6 @@
 
 import math
-from constants import G, KINEMATIC_VISCOSITY
+from constants import G, NU
 from conduit import Conduit
 from pipe import Pipe
 from channel import Channel
@@ -38,7 +38,7 @@ def RAS_outlet_flat_channel_flow():
 
         initial_depth = water_depth[flow_case]
         available_specific_energy = channel.specific_energy(flow, initial_depth)
-        channel.gvf_profile_by_y(flow, available_specific_energy)
+        channel.gvf_profile_by_x(flow, available_specific_energy)
 
 
 def RAS_outlet_tapered_channel_flow():
@@ -76,5 +76,5 @@ def RAS_outlet_tapered_channel_flow():
 
         channel.gvf_profile_by_x(flow, available_specific_energy)
 
-# RAS_outlet_flat_channel_flow()
-# RAS_outlet_tapered_channel_flow()
+RAS_outlet_flat_channel_flow()
+RAS_outlet_tapered_channel_flow()

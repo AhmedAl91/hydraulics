@@ -4,12 +4,9 @@ from constants import G, NU
 from data_classes import HydraulicState, HydraulicResult, DownstreamBoundary
 
 class Channel(Conduit):
-    def __init__(self, downstream_width, upstream_width, **kwargs):
+    def __init__(self, **kwargs):
 
         super().__init__(**kwargs)
-
-        self.downstream_width = downstream_width
-        self.upstream_width = upstream_width
 
     # Rectangular channel geometry
 
@@ -44,7 +41,7 @@ class Channel(Conduit):
 
     def solve_upstream(self, flow, downstream_state):
         # Assess the available energy
-        downstream_specific_energy = downstream_state.EGL - self.downstream_invert
+        downstream_specific_energy = downstream_state.energy_grade - self.downstream_invert
 
         if self.downstream_width == self.upstream_width:
             # Δy is set → solve Δx
@@ -78,7 +75,7 @@ class Channel(Conduit):
         # hydraulic states to determine the upstream state.
 
         # Determine downstream depth from specific energy at boundary
-        initial_depth = self.downstream_depth_from_energy(flow, available_specific_energy)
+        initial_depth = self._from_energy(flow, available_specific_energy)
         # Iterative calculation to find water depth for given flow
         total_x = 0.0
         delta_x = self.length * 1e-4
@@ -105,7 +102,7 @@ class Channel(Conduit):
 
             # Estimate the upstream hydraulic state
             gradient_down = (friction_slope_down - self.slope) / (1 - froude_down**2)
-            trial_depth = depth + gradient_down * delta_x
+            trial_depth = depth + gradient_down * dx
 
             for _ in range(20):
                 froude_up = self.froude_number(flow, depth, x_up)
@@ -117,7 +114,7 @@ class Channel(Conduit):
                 
                 gradient_up = (friction_slope_up - self.slope) / (1 - froude_up**2)
                 mean_gradient = (gradient_down + gradient_up) / 2
-                corrected_depth = depth + mean_gradient * delta_x
+                corrected_depth = depth + mean_gradient * dx
 
                 if abs(corrected_depth - trial_depth) < tolerance:
                     trial_depth = corrected_depth

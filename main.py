@@ -41,5 +41,5 @@ for node_data in system.nodes_data:
 
 network = Network(nodes=nodes, pipes=pipes, channels=channels, weirs=weirs, downstream_boundary=downstream_boundary)
 
-network.solve()
+print(network.solve())
 # network.check_continuity()

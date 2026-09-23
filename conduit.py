@@ -3,13 +3,13 @@ from constants import G, NU
 from data_classes import HydraulicState, HydraulicResult, DownstreamBoundary
 
 class Conduit:
-    def __init__(self, id, position, downstream_width, upstream_width, flow, downstream_invert, upstream_invert, max_depth=0.0, mannings_n=0.0, length=0.0, slope=0.0):
+    def __init__(self, id, position, flow, downstream_width, upstream_width, downstream_invert, upstream_invert, max_depth=0.0, mannings_n=0.0, length=0.0, slope=0.0):
 
         self.id = id
         self.position = position
         self.length = length
-        self.downstream_width = downstream_width 
-        self.upstream_width  = upstream_width  
+        self.downstream_width = downstream_width
+        self.upstream_width = upstream_width
         self.max_depth = max_depth
         self.mannings_n = mannings_n
         self.slope = slope
@@ -29,7 +29,7 @@ class Conduit:
     def hydraulic_radius(self, depth, x=0.0):
         # Rh = A / P
         # Used for Manning friction slope of channels and partially fileld pipes
-        return self.area(depth, x) / self.wetted_perimeter()
+        return self.area(depth, x) / self.wetted_perimeter(depth)
 
     def hydraulic_depth(self, depth, x=0.0):
         # Dh = A / T
@@ -72,19 +72,50 @@ class Conduit:
         return depth + V**2 / (2 * G)
 
     def downstream_depth_from_energy(self, flow, available_energy, x=0.0):
-        # Determines if the energy is above critical and calls a method to iterate
+        # Determine critical depth and minimum specific energy.
         yc = self.critical_depth(flow)
         Ec = self.specific_energy(flow, yc)
 
-        if available_energy <= Ec:
+        # No physically valid steady depth exists for E < Ec at this flow.
+        # Treat values at or below Ec as critical.
+        tolerance = 1.05
+        if available_energy > Ec and available_energy <= Ec * tolerance:
             return yc
-        
+        elif available_energy < Ec:
+            raise ValueError(f"Insufficient energy estimated in {self.id}, check parameters.")
+
+        # For E > Ec there are two possible alternate depths:
+        #   y < yc : supercritical flow
+        #   y > yc : subcritical flow
+
+        # Specific energy alone cannot determine which branch applies.
+        # The flow regime must therefore be determined from the hydraulic
+        # boundary/control conditions.
+
+        # This method assumes the downstream boundary is subcritical and
+        # therefore solves on the y >= yc branch.
         return self.solve_depth_from_energy(flow = flow, target_energy = available_energy, lower_bound = yc, x = x)
     
     def solve_depth_from_energy(self, flow, target_energy, lower_bound, x=0.0, tolerance=1e-6, max_iterations=100):
-        # E = y + velocity head(y), therefore implicit with y, 
-        # iteration is needed to solve for depth for a given specific energy at a target flow
-        # by setting a lower bound at yc, this is solving for sub-critical flow regime only
+        # E = y + velocity head(y), therefore implicit with y (as area depends on depth)
+
+        # For E > Ec there are generally two roots:
+            #
+            #       supercritical root: y < yc
+            #       subcritical root:   y > yc
+
+        # Iteration is needed to solve for depth for a given specific energy at a target flow
+        # and if lower_bound = yc, then this is solving for sub-critical flow regime only.
+
+        # Supercritical flow is determined as a boundary-condition / hydraulic-control decision
+        # where there is expected acceleration e.g. a flume throat, steep-slope transition, 
+        # sluice gate, free overfall, etc. 
+        # can establish a supercritical downstream state. Once that state has been established, 
+        # the appropriate GVF profile GVF should  normally be profiled in the downstream (+x) 
+        # direction, rather than upstream from a downstream boundary. This is  
+        # because information cannot propagate upstream through supercritical flow.
+
+        # The network solver will need re-jigging as two upstream states will be returned...
 
         def residual_energy(depth):
             return self.specific_energy(flow, depth, x) - target_energy

@@ -51,7 +51,12 @@ class Weir(Conduit):
         velocity = self.velocity(flow, H)
         head_loss = H   # rough, not sure how to determine this
 
-        return H, energy_grade, hydraulic_grade, velocity, head_loss
+        upstream_regime = self.weir_type
+
+        if submerged:
+            upstream_regime += "_submerged"
+
+        return H, energy_grade, hydraulic_grade, velocity, upstream_regime, head_loss
     
     def solve_upstream(self, flow, downstream_state):
 
@@ -62,14 +67,13 @@ class Weir(Conduit):
 
         if self.weir_type == "thin_plate":
             
-            upstream_depth, upstream_energy_grade, upstream_hydraulic_grade, upstream_velocity, head_loss = self.flow_over_thin_plate(flow, submerged)
-            print("Submergence: ", submerged)
+            upstream_depth, upstream_energy_grade, upstream_hydraulic_grade, upstream_velocity, upstream_regime, head_loss = self.flow_over_thin_plate(flow, submerged)
 
 
         
         hydraulic_result = HydraulicResult(
             upstream_state=HydraulicState(
-                regime="open_channel",
+                regime=upstream_regime,
                 depth=upstream_depth,
                 energy_grade=upstream_energy_grade,
                 hydraulic_grade=upstream_hydraulic_grade,
