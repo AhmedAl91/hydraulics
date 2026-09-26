@@ -107,11 +107,20 @@ class Conduit:
         # Iteration is needed to solve for depth for a given specific energy at a target flow
         # and if lower_bound = yc, then this is solving for sub-critical flow regime only.
 
+        # Critical flow is established when there is a controlled state, e.g. a rise in z value
+        # via a flume throat, where H = E + z, and a +ve Δz reduces the specific energy, moving the
+        # hydraulic state 'down the sub critical branch' to the critical point at Vc, yc.  
+        # (A reduction in E results in decreasing y or velocity head, but there is a throat accelerating
+        # the fluid, and therefore y must be decreasing.)
+        # After acceleration to Vc, the flow is unstable with a high Fr number, 
+        # therefore supercritical flow. When the bed drops and fluid decelerates, there is an increase
+        # in specific energy and depth, re-establishing subcritical flow after a hydraulic jump.
+
         # Supercritical flow is determined as a boundary-condition / hydraulic-control decision
         # where there is expected acceleration e.g. a flume throat, steep-slope transition, 
         # sluice gate, free overfall, etc. 
         # can establish a supercritical downstream state. Once that state has been established, 
-        # the appropriate GVF profile GVF should  normally be profiled in the downstream (+x) 
+        # the appropriate GVF profile GVF should normally be profiled in the downstream (+x) 
         # direction, rather than upstream from a downstream boundary. This is  
         # because information cannot propagate upstream through supercritical flow.
 

@@ -45,14 +45,14 @@ class Channel(Conduit):
 
         if self.downstream_width == self.upstream_width:
             # Δy is set → solve Δx
-            upstream_depth, upstream_energy_grade, upstream_hydraulic_grade, upstream_velocity, head_loss = self.gvf_profile_by_y(flow, downstream_specific_energy)
+            upstream_regime, upstream_depth, upstream_energy_grade, upstream_hydraulic_grade, upstream_velocity, head_loss = self.gvf_profile_by_y(flow, downstream_specific_energy)
         else:
             # Δx known → geometry known → solve y_up
-            upstream_depth, upstream_energy_grade, upstream_hydraulic_grade, upstream_velocity, head_loss = self.gvf_profile_by_x(flow, downstream_specific_energy)
+            upstream_regime, upstream_depth, upstream_energy_grade, upstream_hydraulic_grade, upstream_velocity, head_loss = self.gvf_profile_by_x(flow, downstream_specific_energy)
 
         hydraulic_result = HydraulicResult(
             upstream_state=HydraulicState(
-                regime="open_channel",
+                regime=upstream_regime,
                 depth=upstream_depth,
                 energy_grade=upstream_energy_grade,
                 hydraulic_grade=upstream_hydraulic_grade,
@@ -143,12 +143,19 @@ class Channel(Conduit):
         print(f"Upstream Fr:      {froude_up:.3f}")
         print("-----------------------------")
 
+        if froude_up < 1: 
+            regime = "subcritical"
+        elif froude_up == 1: 
+            regime = "critical"
+        elif froude_up > 1: 
+            regime = "supercritical"
+
         energy_grade = self.specific_energy(flow, depth, self.length) + self.upstream_invert
         hydraulic_grade = depth + self.upstream_invert
         velocity = self.velocity(flow, depth, self.length)
         head_loss = self.specific_energy(flow, depth, self.length) + self.upstream_invert - self.specific_energy(flow, initial_depth, 0.0) - self.downstream_invert 
 
-        return depth, energy_grade, velocity, hydraulic_grade, head_loss
+        return regime, depth, energy_grade, velocity, hydraulic_grade, head_loss
 
     def gvf_profile_by_y(self, flow, available_specific_energy):
         # dy/dx = (Sf - S0) / (1 - Fr**2)
@@ -247,9 +254,16 @@ class Channel(Conduit):
         print(f"Upstream Fr:      {froude_up:.3f}")
         print("-----------------------------")
 
+        if froude_up < 1: 
+            regime = "subcritical"
+        elif froude_up == 1: 
+            regime = "critical"
+        elif froude_up > 1: 
+            regime = "supercritical"
+
         energy_grade = self.specific_energy(flow, depth) + self.upstream_invert
         hydraulic_grade = depth + self.upstream_invert
         velocity = self.velocity(flow, depth)
         head_loss = self.specific_energy(flow, depth) + self.upstream_invert - self.specific_energy(flow, initial_depth) - self.downstream_invert 
 
-        return depth, energy_grade, velocity, hydraulic_grade, head_loss
+        return regime, depth, energy_grade, velocity, hydraulic_grade, head_loss

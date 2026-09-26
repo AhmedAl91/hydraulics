@@ -53,15 +53,75 @@ class Network:
 
         results = {}
 
-        for component in self.ordered_components:
+        # A serial hydraulic model:
+
+        # UPSTREAM                                      DOWNSTREAM
+
+        #  A -------- B -------- C -------- D -------- Boundary
+        #                                          ← solver starts
+
+        # The loop is doing: Boundary ← D ← C ← B ← A
+
+        # However when the solver arrives at a hydraulic control:
+
+        #  A -------- B -------- C -------- D -------- Boundary
+        #      ↑
+        #    control
+
+        #      → supercritical →
+        #                       jump
+        #                       ← subcritical ←
+
+        # It must now segment the loop by solving B → C → D again
+
+        for i, component in enumerate(self.ordered_components):
 
             result = component.solve_upstream(flow = component.flow, downstream_state = downstream_state)
+                
+            if result.is_hydraulic_control:
 
-            results[component.id] = result
+                # We have reached a hydraulic control, e.g. a flume
+                # Solve the hydraulic domain downstream of the control.
+                # This may contain:
+                # critical → supercritical → hydraulic jump → subcritical
 
-            downstream_state = result.upstream_state
+                # ordered_components:
+                
+                # [D, C, B, A]
+                #        ^
+                #        i = 2
+                
+                # Components downstream of B:
+                # [D, C]
+                
+                # Reverse them for downstream marching:
+                # [C, D]
+
+                downstream_components = self.components_downstream_of(i)
+                downstream_results = self.solve_downstream_domain(
+                    components=downstream_components, 
+                    upstream_state=result.upstream_state,
+                    downstream_state=downstream_state
+                )
+                results.update(downstream_results)
+
+                # Continue upstream using the state established at the control.
+                downstream_state = result.upstream_state
+
+            else:
+
+                results[component.id] = result
+                downstream_state = result.upstream_state
 
         return results
+
+    def solve_downstream_domain(self, components, upstream_state, downstream_state):
+        pass
+
+
+    def components_downstream_of(self, index):
+        return list(reversed(self.ordered_components[:index]))
+
     
     def check_continuity(self, node_id):
 

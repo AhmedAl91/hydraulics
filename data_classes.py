@@ -7,12 +7,13 @@ class HydraulicState:
     hydraulic_grade: float
     velocity: float = 0.0
     depth: float | None = None
-    regime: str | None = None
+    regime: str | None = None       # "subcritical", "critical", "supercritical"
 
 @dataclass
 class HydraulicResult:
     upstream_state: HydraulicState
     head_loss: float | None = None
+    is_hydraulic_control: bool | False = False
 
 @dataclass
 class DownstreamBoundary:
