@@ -76,6 +76,7 @@ class Network:
 
         for i, component in enumerate(self.ordered_components):
 
+            # component.flow needs changing and should be a property of the hydraulic result?
             result = component.solve_upstream(flow = component.flow, downstream_state = downstream_state)
                 
             if result.is_hydraulic_control:
@@ -116,7 +117,16 @@ class Network:
         return results
 
     def solve_downstream_domain(self, components, upstream_state, downstream_state):
-        pass
+
+        results = {}
+
+        for component in components:
+            # flow to be passed as result property?
+            result = component.solve_downstream(flow = component.flow, upstream_state = upstream_state)
+
+            upstream_state = result.downstream_state
+
+        return results
 
 
     def components_downstream_of(self, index):
