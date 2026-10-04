@@ -7,6 +7,12 @@ downstream_boundary_data = {
 
 pipes_data = []
 
+# fittings are assigned like this:
+# "fitting_type": {
+    # "type": "pipe_entry_sharp_edged",
+    # "position": 0.0
+# }
+
 channels_data = []
 
 weirs_data = [

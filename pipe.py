@@ -13,6 +13,7 @@ class Pipe(Conduit):
         super().__init__(**kwargs)
 
         self.diameter = diameter
+        self.max_depth = diameter
         self.radius = diameter / 2
         self.roughness = roughness
 
@@ -48,6 +49,8 @@ class Pipe(Conduit):
     def friction_factor_filled(self, flow, x=0.0):
         if flow == 0:
             return 0.0
+        
+        depth = self.diameter
 
         V = self.velocity(flow, depth, x)
 
@@ -63,7 +66,7 @@ class Pipe(Conduit):
         return 0.25 / (math.log10(self.roughness / (3.7 * self.diameter) + 5.74 / Re**0.9 ) ** 2)
 
     def total_k_values(self):
-        return sum(K_VALUES[fitting] for fitting in self.fittings)
+        return sum(K_VALUES[fitting["type"]] for fitting in self.fittings)
 
     def headloss_filled(self, flow):
         depth = self.diameter
@@ -79,32 +82,66 @@ class Pipe(Conduit):
         return friction_loss + fittings_loss
 
     def gvf_profile_by_x(self, flow, available_specific_energy, tolerance=1e-6):
-        # dy/dx = (Sf - S0) / (1 - Fr**2)
-        # The head (and therefore depth) of free flowing water is proportional to the friction slope (Sf)
-        # which is a measure of head loss per unit distance. It is eased by the physical slope (S0)
-        # and the velocity (inferred through Fr).
+        # For steady gradually varied flow:
+        #
+        #     dy/dx = (Sf - S0) / (1 - Fr**2)
+        #
+        # when integrating from downstream to upstream i.e subcritical regime.
+        #
+        # Sf represents distributed frictional energy loss per unit length,
+        # while S0 represents the change in channel invert elevation.
+        # Their difference determines the change in specific energy.
+        # The Froude term (function of velocity) determines how that specific-energy change
+        # translates into a change in flow depth.
 
         # This method plugs in a small change in length (Δx) to estimate the new upstream depth (y).
         # Fixed-point iteration is used to estimate a mean gradient across the downstream and upstream 
         # hydraulic states to determine the upstream state.
 
         # Determine downstream depth from specific energy at boundary
-        initial_depth = self.downstream_depth_from_energy(flow, available_specific_energy)
+        initial_depth = self.depth_from_energy(flow, available_specific_energy)
         # Iterative calculation to find water depth for given flow
         total_x = 0.0
         delta_x = self.length * 1e-4
         depth = initial_depth
+
+        fittings = self.fittings.copy()
         
-        # This is iterating from the downstream end of the channel to the upstream end, 
+        # This is iterating from the downstream end of the pipe to the upstream end, 
         # calculating the water depth at each step based on the friction slope and Froude number. 
+
+        # The discrete losses in a pipe are factored in by estimating the fittings loss and summing
+        # this to the energy downstream. It uses the downstream velocity to estimate this, which is not 
+        # always correct but the error is assumed to be tolerable.
+
         # The loop continues until the total distance covered equals the channel length. 
         # If the water depth becomes negative, a warning is printed, and the loop breaks.
+
         # Finally, it prints the calculated water depth, the freeboard avaialable, and the Froude number.
+
         while total_x < self.length:
             x_down = total_x
             # Prevent overshooting
             x_up = min(total_x + delta_x, self.length)
             dx = x_up - x_down  
+
+            fitting_down = fittings[-1]
+
+            # Apply discrete head losses for fittings
+            if x_down <= fitting_down["position"] <= x_up:
+                velocity_down = self.velocity(self.flow, depth, x_down)
+
+                K = K_VALUES[fitting_down["type"]]
+
+                fitting_loss = K * velocity_down**2 / (2 * G)
+
+                energy_down = self.specific_energy(self.flow, depth, x_down)
+
+                energy_up = energy_down + fitting_loss
+
+                depth = self.depth_from_energy(self.flow, energy_up, x_up, "subcritical")
+
+                fittings.pop()
 
             # Define the downstream hydraulic state
             froude_down = self.froude_number(flow, depth, x_down)
@@ -119,7 +156,7 @@ class Pipe(Conduit):
             trial_depth = depth + gradient_down * dx
 
             for _ in range(20):
-                froude_up = self.froude_number(flow, depth, x_up)
+                froude_up = self.froude_number(flow, trial_depth, x_up)
                 friction_slope_up = self.manning_friction_slope(flow, trial_depth, x_up)
 
                 if abs(1 - froude_up**2) < 0.05:

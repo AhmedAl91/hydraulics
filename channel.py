@@ -65,9 +65,10 @@ class Channel(Conduit):
     
     def gvf_profile_by_x(self, flow, available_specific_energy, tolerance=1e-6):
         # dy/dx = (Sf - S0) / (1 - Fr**2)
-        # The head (and therefore depth) of free flowing water is proportional to the friction slope (Sf)
-        # which is a measure of head loss per unit distance. It is eased by the physical slope (S0)
-        # and the velocity (inferred through Fr).
+        # The change in head of free flowing water is proportional to the friction slope (Sf)
+        # which is a measure of head loss per unit distance. It is a function of velocity (inferred through Fr)
+        # and is eased by the physical slope (S0). The head change results in depth change depending on the 
+        # regime; this method assesses sub-critical regimes i.e. working downstream -> upstream.
 
         # This method plugs in a small change in length (Δx) to estimate the new upstream depth (y).
         # It works for rectangular channels and has allowance for tapered widths by re-estimating width, Sf and Fr.
@@ -83,9 +84,12 @@ class Channel(Conduit):
         
         # This is iterating from the downstream end of the channel to the upstream end, 
         # calculating the water depth at each step based on the friction slope and Froude number. 
+
         # The loop continues until the total distance covered equals the channel length. 
         # If the water depth becomes negative, a warning is printed, and the loop breaks.
+
         # Finally, it prints the calculated water depth, the freeboard avaialable, and the Froude number.
+
         while total_x < self.length:
             x_down = total_x
             # Prevent overshooting
@@ -105,7 +109,7 @@ class Channel(Conduit):
             trial_depth = depth + gradient_down * dx
 
             for _ in range(20):
-                froude_up = self.froude_number(flow, depth, x_up)
+                froude_up = self.froude_number(flow, trial_depth, x_up)
                 friction_slope_up = self.manning_friction_slope(flow, trial_depth, x_up)
 
                 if abs(1 - froude_up**2) < 0.05:
@@ -159,9 +163,9 @@ class Channel(Conduit):
 
     def gvf_profile_by_y(self, flow, available_specific_energy):
         # dy/dx = (Sf - S0) / (1 - Fr**2)
-        # The head (and therefore depth) of free flowing water is proportional to the friction slope (Sf)
-        # which is a measure of head loss per unit distance. It is eased by the physical slope (S0)
-        # and the velocity (inferred through Fr)
+        # The change in head (and therefore depth) of free flowing water is proportional to the friction slope (Sf)
+        # which is a measure of head loss per unit distance. It is a function of velocity (inferred through Fr)
+        # and is eased by the physical slope (S0).
 
         # This method plugs in a small change in depth (Δy) to determine the change in length (Δx).
         # It only works for straight lengths of channels, i.e. does not work for pipes nor tapered channels 
@@ -173,7 +177,7 @@ class Channel(Conduit):
         # and can overshoot. 
 
         # Determine downstream depth from specific energy at boundary
-        initial_depth = self.downstream_depth_from_energy(flow, available_specific_energy)
+        initial_depth = self.depth_from_energy(flow, available_specific_energy)
         # Iterative calculation to find water depth for given flow
         total_x = 0.0
         delta_y = 1e-7

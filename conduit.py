@@ -71,32 +71,35 @@ class Conduit:
 
         return depth + V**2 / (2 * G)
 
-    def downstream_depth_from_energy(self, flow, available_energy, x=0.0):
+    def depth_from_energy(self, flow, available_energy, x=0.0, regime="subcritical"):
         # Determine critical depth and minimum specific energy.
         yc = self.critical_depth(flow)
         Ec = self.specific_energy(flow, yc)
 
         # No physically valid steady depth exists for E < Ec at this flow.
         # Treat values at or below Ec as critical.
-        tolerance = 1.05
-        if available_energy > Ec and available_energy <= Ec * tolerance:
-            return yc
-        elif available_energy < Ec:
+
+        energy_tolerance = 1e-3
+
+        if available_energy < Ec - energy_tolerance:
             raise ValueError(f"Insufficient energy estimated in {self.id}, check parameters.")
+        
+        if abs(available_energy - Ec) <= energy_tolerance:
+            return yc
 
         # For E > Ec there are two possible alternate depths:
         #   y < yc : supercritical flow
         #   y > yc : subcritical flow
 
         # Specific energy alone cannot determine which branch applies.
-        # The flow regime must therefore be determined from the hydraulic
+        # The flow regime must be determined from the hydraulic
         # boundary/control conditions.
+        
+        # This method default assumes the regime is subcritical.
 
-        # This method assumes the downstream boundary is subcritical and
-        # therefore solves on the y >= yc branch.
-        return self.solve_depth_from_energy(flow = flow, target_energy = available_energy, lower_bound = yc, x = x)
+        return self.solve_depth_from_energy(flow = flow, regime = regime, target_energy = available_energy, yc = yc, x = x)
     
-    def solve_depth_from_energy(self, flow, target_energy, lower_bound, x=0.0, tolerance=1e-6, max_iterations=100):
+    def solve_depth_from_energy(self, flow, regime, target_energy, yc, x=0.0, tolerance=1e-6, max_iterations=100):
         # E = y + velocity head(y), therefore implicit with y (as area depends on depth)
 
         # For E > Ec there are generally two roots:
@@ -104,51 +107,83 @@ class Conduit:
             #       supercritical root: y < yc
             #       subcritical root:   y > yc
 
-        # Iteration is needed to solve for depth for a given specific energy at a target flow
-        # and if lower_bound = yc, then this is solving for sub-critical flow regime only.
+        # Iteration is needed to solve for depth for a given specific energy at a target flow,
+        # and this method handles both branches of the specific energy curve.
 
-        # Critical flow is established when there is a controlled state, e.g. a rise in z value
-        # via a flume throat, where H = E + z, and a +ve Δz reduces the specific energy, moving the
-        # hydraulic state 'down the sub critical branch' to the critical point at Vc, yc.  
-        # (A reduction in E results in decreasing y or velocity head, but there is a throat accelerating
-        # the fluid, and therefore y must be decreasing.)
-        # After acceleration to Vc, the flow is unstable with a high Fr number, 
-        # therefore supercritical flow. When the bed drops and fluid decelerates, there is an increase
-        # in specific energy and depth, re-establishing subcritical flow after a hydraulic jump.
+        # A hydraulic control may drive an initially subcritical flow toward
+        # critical conditions. For example, an increase in bed elevation reduces
+        # the available specific energy:
 
-        # Supercritical flow is determined as a boundary-condition / hydraulic-control decision
-        # where there is expected acceleration e.g. a flume throat, steep-slope transition, 
-        # sluice gate, free overfall, etc. 
-        # can establish a supercritical downstream state. Once that state has been established, 
-        # the appropriate GVF profile GVF should normally be profiled in the downstream (+x) 
-        # direction, rather than upstream from a downstream boundary. This is  
-        # because information cannot propagate upstream through supercritical flow.
-
-        # The network solver will need re-jigging as two upstream states will be returned...
+        #     H = z + E
+        
+        # neglecting losses, increasing z decreases E (ΔE ~= -Δz).
+        
+        # On the subcritical branch this causes depth to decrease and velocity
+        # to increase until the minimum specific energy is reached at:
+        
+        #     y = yc, Fr = 1
+        
+        # Downstream geometry/boundary conditions may then establish a
+        # supercritical state, e.g. downstream of a hump, sluice gate,
+        # steep-slope transition, or free overfall.
+        
+        # Once supercritical flow is established, its GVF profile should normally
+        # be solved downstream because the downstream boundary cannot control
+        # the upstream supercritical profile.
+        
+        # A hydraulic jump may subsequently transition the flow from
+        # supercritical to subcritical, with increased depth, reduced velocity
+        # and significant energy dissipation.
 
         def residual_energy(depth):
             return self.specific_energy(flow, depth, x) - target_energy
-        
-        depth_low = lower_bound    # minimum energy = critical depth 
-        depth_high = target_energy # large depth energy ~= depth
 
-        while residual_energy(depth_high) < 0:
-            depth_high *= 2
+        if regime == "subcritical":
+            depth_low = yc                              # minimum energy = critical depth 
+            depth_high = max(target_energy, 2 * yc)     # where large depth energy ~= depth, or double the critical depth
 
-        # Iterative bisection 
-        for _ in range(max_iterations):
-            depth_mid = 0.5 * (depth_low + depth_high)
-            residual = residual_energy(depth_mid)
+            while residual_energy(depth_high) < 0:
+                depth_high *= 2
 
-            if abs(residual) < tolerance:
-                return depth_mid
-            
-            if residual < 0:
-                # Depth is too shallow
-                depth_low = depth_mid
-            else:
-                # Depth is too deep
-                depth_high = depth_mid
+            # Iterative bisection 
+            for _ in range(max_iterations):
+                depth_mid = 0.5 * (depth_low + depth_high)
+                residual = residual_energy(depth_mid)
+
+                if abs(residual) < tolerance:
+                    return depth_mid
+                
+                if residual < 0:
+                    # Depth is too shallow
+                    depth_low = depth_mid
+                else:
+                    # Depth is too deep
+                    depth_high = depth_mid
+
+        elif regime == "supercritical":
+            depth_low = max(yc * 1e-2, 1e-3)       # trial value of 1% of critical depth, or 1 mm
+            depth_high = yc                        # limited by critical depth
+
+            while residual_energy(depth_high) < 0:
+                depth_high *= 2
+
+            # Iterative bisection 
+            for _ in range(max_iterations):
+                depth_mid = 0.5 * (depth_low + depth_high)
+                residual = residual_energy(depth_mid)
+
+                if abs(residual) < tolerance:
+                    return depth_mid
+                
+                if residual > 0:
+                    # Depth is too shallow
+                    depth_low = depth_mid
+                else:
+                    # Depth is too deep
+                    depth_high = depth_mid
+
+        else:
+            raise ValueError(f"Unknown flow regime: {regime}")
 
         return 0.5 * (depth_low + depth_high)
 
