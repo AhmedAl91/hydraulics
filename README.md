@@ -2,7 +2,7 @@
 
 This is a back-end model for 1D hydraulic assessments. It is built from bottom up using:
 
-- Dataclasses for hydraulic states/results (see data_classes.py) which allows the user to define the downstream boundary (e.g. an outfall), and enables the model to propagate the hydraulic state through the loop.
+- Dataclasses for hydraulic states/results (see data_classes.py) which allows the user to define the downstream boundary (e.g. an outfall), and enables the model to propagate the hydraulic state through a calculation loop.
 
 - Fixed parameters and default look-up data exist in constants.py and fittings.py
   
