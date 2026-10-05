@@ -261,8 +261,34 @@ class Pipe(Conduit):
         # a) if the freeboard is estimated as -ve during a GVF profile, then the pipe is actually surcharged and the method should
         #  return a boolean to state re-running the calc as surcharged/pressurised
 
-        # b) if the GVF profile determines a Fr approaching 1 then it should return a boolean to say regime="supercritical"
+        # b) if the GVF profile determines a Fr approaching 1 then it should return a boolean for a regime boundary
         # and instead call solve_downstream()
+        #                   critical
+        #                     │
+        #                     ▼
+        # upstream  ───────────●────────── downstream
+
+        #     supercritical →       OR       ← subcritical
+
+        # class GVFStatus(Enum):
+        #   COMPLETE = "complete"
+        #   SURCHARGED = "surcharged"
+        #   CRITICAL_CONTROL = "critical_control"
+
+        # profile = self.gvf_profile_by_x(
+        #     flow,
+        #     downstream_specific_energy,
+        # )
+
+        # if profile.status == GVFStatus.SURCHARGED:
+        #     # Part-full assumption failed.
+        #     # Re-evaluate using full-pipe hydraulics.
+        #     ...
+
+        # elif profile.status == GVFStatus.CRITICAL_CONTROL:
+        #     # Downstream-controlled subcritical solution
+        #     # cannot propagate farther upstream.
+        #     ...
         else:
             if hydraulic_grade <= self.downstream_invert:
                 print("CASE 2", hydraulic_grade, self.downstream_invert)
