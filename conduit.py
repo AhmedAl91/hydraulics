@@ -3,7 +3,7 @@ from constants import G, NU
 from data_classes import HydraulicState, HydraulicResult, DownstreamBoundary
 
 class Conduit:
-    def __init__(self, id, position, flow, downstream_width, upstream_width, downstream_invert, upstream_invert, max_depth=0.0, mannings_n=0.0, length=0.0, slope=0.0):
+    def __init__(self, id, position, downstream_width, upstream_width, downstream_invert, upstream_invert, max_depth=0.0, mannings_n=0.0, length=0.0, slope=0.0):
 
         self.id = id
         self.position = position
@@ -15,8 +15,6 @@ class Conduit:
         self.slope = slope
         self.downstream_invert = downstream_invert
         self.upstream_invert = upstream_invert
-
-        self.flow = flow 
 
     # Absracted methods for child classes - agnostic of geometry
 

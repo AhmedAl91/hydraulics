@@ -5,6 +5,7 @@ from constants import G
 class HydraulicState:
     energy_grade: float
     hydraulic_grade: float
+    flow: float = 0.0
     velocity: float = 0.0
     depth: float | None = None
     regime: str | None = None       # "subcritical", "critical", "supercritical"

@@ -76,8 +76,7 @@ class Network:
 
         for i, component in enumerate(self.ordered_components):
 
-            # component.flow needs changing and should be a property of the hydraulic result?
-            result = component.solve_upstream(flow = component.flow, downstream_state = downstream_state)
+            result = component.solve_upstream(downstream_state = downstream_state)
                 
             if result.is_hydraulic_control:
 
@@ -117,12 +116,21 @@ class Network:
         return results
 
     def solve_downstream_domain(self, components, upstream_state, downstream_state):
+        # This needs development, will need to create a solve_downstream(method) for conduits,
+        # specifically, channels, that iterates with a +ve Δx, with a check for hydraulic jump 
 
         results = {}
 
         for component in components:
             # flow to be passed as result property?
             result = component.solve_downstream(flow = component.flow, upstream_state = upstream_state)
+
+            results.append(result)
+
+            # The domain loop should end when a subcritical regime is reached 
+            if result.regime == "subcritical":
+                # assign the result and then break the loop
+                pass 
 
             upstream_state = result.downstream_state
 

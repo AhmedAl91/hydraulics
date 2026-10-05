@@ -1,33 +1,26 @@
 ## Hydraulic Model in development
 
-The model is built from bottom up using:
+This is a back-end model for 1D hydraulic assessments. It is built from bottom up using:
 
-- A class for Nodes (see node.py) which have AODs as properties.
+- Dataclasses for hydraulic states/results (see data_classes.py) which allows the user to define the downstream boundary (e.g. an outfall), and enables the model to propagate the hydraulic state through the loop.
+
+- Fixed parameters and default look-up data exist in constants.py and fittings.py
   
-- Classes for Pipes and Channels (see pipe.py and channel.py) which are constructed with design parameters (dimensions, roughness, fittings etc) and hydraulic methods where relevant e.g. head losses in filled pipes, gradually varied profiles in channels.
+- Classes for Conduits (see conduit.py, pipe.py, channel.py) and Components (see weir.py) which are constructed with design parameters (dimensions, roughness, fittings etc) and hydraulic methods where relevant for their geometry e.g. head losses in filled pipes, gradually varied profiles in channels. Methods have the same name across child classes to ensure abstraction. 
 
-- A Network class (see network.py) which assigns Pipes and Channels to Nodes as 'Links'. This Network object orchestrates the calculation by calling the appropriate method for each Pipe, Channel and Node object
+- A class for Nodes (see node.py) which have AODs as properties. This is not implemented yet but will be needed for constructing junctions.
 
-- Objects are constructed and methods orchestrated via main.py
+- A Network class (see network.py) which orchestrates the calculation by looping through each object assigned to the network and calling the appropriate solver method for each object. Currently, only serial networks are constructed using a 'position' property to assign the order for each object in the series, where '1' is the object directly upstream of the downstream boundary. Subcritical regimes are assumed by default and therefore solving from downstream -> upstream is the default configuration. Supercritical regimes are identified using a heuristic, where some components are considered a form of hydraulic control (e.g. flumes) and the solver checks for a change in regime. If a supercritical regime is identified, the loop is segmented where the calculated is dictated by the upstream state and the previous downstream states are updated.
 
-The intent is for the model to work by:
+- Objects are constructed and methods orchestrated via main.py, fetching data in system.py; this will need replacing with an API for user input.
 
-- User defined inputs for each Pipe, Channel and Node object. Currently this edited in-line in system.py but the intent is to replace with an API e.g. JSON format
 
-- Fixed parameters and look-up data exist in constants.py and fittings.py
+Further work to develop this model:
 
-- The Network object is constructed using the above objects, with a 'flows' object passed as an argument. The appropriate method is called to estimate head loss from node to node. Calling methods requires development, but is currently manually edited in-line and presumably should be passed as an argument.
-
-- The Network object calls the method for assessing flow continuity. The continuity equation at each node must resolve as:
+- A Network method for connecting serial networks to each other to create junctions, creating a parent network. The Network object will assess flow continuity, where the flow at each node must resolve as:
 
   **∑Qin - ∑Qout = 0**
-- Where if the result > tolerance then the head losses are re-calculated using an iterative method (presumably bi-section of flows)
 
+- If the residual flow > tolerance then the head losses are re-calculated using an iterative method (presumably bi-section of flows)
 
-Actions to develop this model:
-
-- Iterative method for assessing head losses to reach flow continuity (result < tolerance)
-
-- Determine algorithm for calling the appropriate method, can be user controlled as input using the method name as an argument, with default values to assess gradually varied flows (GVF) and pipe head loss (check for filled pipe and re-assess for partial fill)
-
-- User input API e.g. GUI with JSON
+- User input API with JSON

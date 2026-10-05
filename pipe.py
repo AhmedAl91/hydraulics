@@ -129,17 +129,17 @@ class Pipe(Conduit):
 
             # Apply discrete head losses for fittings
             if x_down <= fitting_down["position"] <= x_up:
-                velocity_down = self.velocity(self.flow, depth, x_down)
+                velocity_down = self.velocity(flow, depth, x_down)
 
                 K = K_VALUES[fitting_down["type"]]
 
                 fitting_loss = K * velocity_down**2 / (2 * G)
 
-                energy_down = self.specific_energy(self.flow, depth, x_down)
+                energy_down = self.specific_energy(flow, depth, x_down)
 
                 energy_up = energy_down + fitting_loss
 
-                depth = self.depth_from_energy(self.flow, energy_up, x_up, "subcritical")
+                depth = self.depth_from_energy(flow, energy_up, x_up, "subcritical")
 
                 fittings.pop()
 
@@ -202,7 +202,10 @@ class Pipe(Conduit):
         return depth, energy_grade, velocity, hydraulic_grade, head_loss
 
     
-    def solve_upstream(self, flow, downstream_state):
+    def solve_upstream(self, downstream_state):
+        # Fetch the downstream flow - at some point flow split in junction nodes will be needed but not here for Pipes
+        flow = downstream_state.flow
+        
         # Downstream hydraulic condition
         crown = self.downstream_invert + self.diameter
         velocity_head = downstream_state.velocity ** 2 / (2 * G)
@@ -215,6 +218,7 @@ class Pipe(Conduit):
             hydraulic_result = HydraulicResult(
                 upstream_state=HydraulicState(
                     regime="pressurised",
+                    flow=flow,
                     depth=self.diameter,
                     energy_grade=downstream_state.energy_grade + head_loss,
                     hydraulic_grade=self.diameter + self.upstream_invert,

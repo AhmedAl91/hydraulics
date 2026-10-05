@@ -39,24 +39,28 @@ class Channel(Conduit):
 
         return (((flow / width) ** 2) / G) ** (1/3) 
 
-    def solve_upstream(self, flow, downstream_state):
+    def solve_upstream(self, downstream_state):
+        # Fetch the downstream flow - at some point flow split in junction nodes will be needed but not here for Channels
+        flow = downstream_state.flow
+        
         # Assess the available energy
         downstream_specific_energy = downstream_state.energy_grade - self.downstream_invert
 
         if self.downstream_width == self.upstream_width:
             # Δy is set → solve Δx
-            upstream_regime, upstream_depth, upstream_energy_grade, upstream_hydraulic_grade, upstream_velocity, head_loss = self.gvf_profile_by_y(flow, downstream_specific_energy)
+            regime, depth, energy_grade, hydraulic_grade, velocity, head_loss = self.gvf_profile_by_y(flow, downstream_specific_energy)
         else:
             # Δx known → geometry known → solve y_up
-            upstream_regime, upstream_depth, upstream_energy_grade, upstream_hydraulic_grade, upstream_velocity, head_loss = self.gvf_profile_by_x(flow, downstream_specific_energy)
+            regime, depth, energy_grade, hydraulic_grade, velocity, head_loss = self.gvf_profile_by_x(flow, downstream_specific_energy)
 
         hydraulic_result = HydraulicResult(
             upstream_state=HydraulicState(
-                regime=upstream_regime,
-                depth=upstream_depth,
-                energy_grade=upstream_energy_grade,
-                hydraulic_grade=upstream_hydraulic_grade,
-                velocity=upstream_velocity,
+                regime=regime,
+                flow=flow,
+                depth=depth,
+                energy_grade=energy_grade,
+                hydraulic_grade=hydraulic_grade,
+                velocity=velocity,
             ),
             head_loss=head_loss
         )

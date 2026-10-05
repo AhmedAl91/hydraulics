@@ -33,7 +33,7 @@ def RAS_outlet_flat_channel_flow():
     for flow_case in flow_range:
         flow = flow_range[flow_case]
         channel = Channel(id="RAS_outlet_flat_channel", position=1, length=channel_length, downstream_width=downstream_width, upstream_width=upstream_width,
-                          max_depth=max_water_depth, mannings_n=mannings_n, slope=slope, flow=flow,
+                          max_depth=max_water_depth, mannings_n=mannings_n, slope=slope,
                           downstream_invert=downstream_invert, upstream_invert=upstream_invert)
 
         initial_depth = water_depth[flow_case]
@@ -68,7 +68,7 @@ def RAS_outlet_tapered_channel_flow():
     for flow_case in flow_range:
         flow = flow_range[flow_case]
         channel = Channel(id="RAS_outlet_tapered_channel", position=1, length=channel_length, downstream_width=downstream_width, upstream_width=upstream_width,
-                          max_depth=max_water_depth, mannings_n=mannings_n, slope=slope, flow=flow, 
+                          max_depth=max_water_depth, mannings_n=mannings_n, slope=slope, 
                           downstream_invert=downstream_invert, upstream_invert=upstream_invert)
 
         initial_depth = water_depth[flow_case]
