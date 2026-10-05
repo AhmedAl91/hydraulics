@@ -65,8 +65,14 @@ class Pipe(Conduit):
         # Turbulent
         return 0.25 / (math.log10(self.roughness / (3.7 * self.diameter) + 5.74 / Re**0.9 ) ** 2)
 
+    def k_value(self, fitting):
+        if fitting["k_value"] is None:
+            return K_VALUES[fitting["type"]]
+        
+        return fitting["k_value"]
+
     def total_k_values(self):
-        return sum(K_VALUES[fitting["type"]] for fitting in self.fittings)
+        return sum(self.k_value(fitting) for fitting in self.fittings)
 
     def headloss_filled(self, flow):
         depth = self.diameter
@@ -78,6 +84,14 @@ class Pipe(Conduit):
         friction_loss = f * self.length / self.diameter * V**2 / (2 * G)
 
         fittings_loss = K * V**2 / (2 * G)
+
+
+        print(f"Solving pipe head loss for {self.id}:")
+        print(f"Flow: {flow:.3f} m³/s")
+        print(f"Friction losses: {friction_loss:.3f} m")
+        print(f"Minor losses:   {fittings_loss:.3f} m")
+        print(f"Total losses:   {friction_loss + fittings_loss:.4f} m")
+        print("-----------------------------")
 
         return friction_loss + fittings_loss
 
@@ -125,23 +139,24 @@ class Pipe(Conduit):
             x_up = min(total_x + delta_x, self.length)
             dx = x_up - x_down  
 
-            fitting_down = fittings[-1]
+            if fittings:
+                fitting_down = fittings[-1]
 
-            # Apply discrete head losses for fittings
-            if x_down <= fitting_down["position"] <= x_up:
-                velocity_down = self.velocity(flow, depth, x_down)
+                # Apply discrete head losses for fittings
+                if x_down <= fitting_down["position_by_x"] <= x_up:
+                    velocity_down = self.velocity(flow, depth, x_down)
 
-                K = K_VALUES[fitting_down["type"]]
+                    K = self.k_value(fitting_down)
 
-                fitting_loss = K * velocity_down**2 / (2 * G)
+                    fitting_loss = K * velocity_down**2 / (2 * G)
 
-                energy_down = self.specific_energy(flow, depth, x_down)
+                    energy_down = self.specific_energy(flow, depth, x_down)
 
-                energy_up = energy_down + fitting_loss
+                    energy_up = energy_down + fitting_loss
 
-                depth = self.depth_from_energy(flow, energy_up, x_up, "subcritical")
+                    depth = self.depth_from_energy(flow, energy_up, x_up, "subcritical")
 
-                fittings.pop()
+                    fittings.pop()
 
             # Define the downstream hydraulic state
             froude_down = self.froude_number(flow, depth, x_down)
@@ -194,50 +209,87 @@ class Pipe(Conduit):
         print(f"Upstream Fr:      {froude_up:.3f}")
         print("-----------------------------")
 
+        if froude_up < 1: 
+            regime = "subcritical"
+        elif froude_up == 1: 
+            regime = "critical"
+        elif froude_up > 1: 
+            regime = "supercritical"
+
         energy_grade = self.specific_energy(flow, depth, self.length) + self.upstream_invert
         hydraulic_grade = depth + self.upstream_invert
         velocity = self.velocity(flow, depth, self.length)
         head_loss = self.specific_energy(flow, depth, self.length) + self.upstream_invert - self.specific_energy(flow, initial_depth, 0.0) - self.downstream_invert 
 
-        return depth, energy_grade, velocity, hydraulic_grade, head_loss
+        return regime, depth, energy_grade, velocity, hydraulic_grade, head_loss
 
     
     def solve_upstream(self, downstream_state):
-        # Fetch the downstream flow - at some point flow split in junction nodes will be needed but not here for Pipes
+        # Fetch the downstream state
         flow = downstream_state.flow
-        
-        # Downstream hydraulic condition
         crown = self.downstream_invert + self.diameter
-        velocity_head = downstream_state.velocity ** 2 / (2 * G)
-        hydraulic_grade = downstream_state.energy_grade - velocity_head
-        depth_critical = self.critical_depth(flow)
+        hydraulic_grade = downstream_state.hydraulic_grade
+        velocity = self.velocity(flow, self.diameter)
+        velocity_head = velocity ** 2 / (2*G)
 
-        if hydraulic_grade >= crown:
+        # -------------------------------------------------
+        # 1. Pressurised outlet
+        # -------------------------------------------------
+        if hydraulic_grade >= crown: 
+            print("CASE 1")
+            # NOTE This is a simplified assumption as the flow may transition to partial flow upstream, will need to do another check upstream
             # Pipe is surcharged/pressurised
             head_loss = self.headloss_filled(flow)
+            # EGL up = EGL down + head_loss
+            # HGL = EGL - velocity head
             hydraulic_result = HydraulicResult(
                 upstream_state=HydraulicState(
                     regime="pressurised",
                     flow=flow,
                     depth=self.diameter,
                     energy_grade=downstream_state.energy_grade + head_loss,
-                    hydraulic_grade=self.diameter + self.upstream_invert,
-                    velocity=self.velocity(flow, self.diameter),
+                    hydraulic_grade=downstream_state.energy_grade - velocity_head,
+                    velocity=velocity,
                 ),
                 head_loss=head_loss,
             )
+
+        # -------------------------------------------------
+        # 2. Free-surface outlet
+        # -------------------------------------------------
+        # NOTE this needs the most rework:
+        # a) if the freeboard is estimated as -ve during a GVF profile, then the pipe is actually surcharged and the method should
+        #  return a boolean to state re-running the calc as surcharged/pressurised
+
+        # b) if the GVF profile determines a Fr approaching 1 then it should return a boolean to say regime="supercritical"
+        # and instead call solve_downstream()
         else:
-            # Solve GVF by Δx
-            # Assess the available energy
-            downstream_specific_energy = downstream_state.energy_grade - self.downstream_invert
-            upstream_depth, upstream_energy_grade, upstream_hydraulic_grade, upstream_velocity, head_loss = self.gvf_profile_by_x(flow, downstream_specific_energy)
+            if hydraulic_grade <= self.downstream_invert:
+                print("CASE 2", hydraulic_grade, self.downstream_invert)
+                # Free outlet - downstream receiving level does not control the conduit.
+                # NOTE this is a simplified model.
+                # Approximate the downstream specific energy as Ec + (S0 - Sf).Δx
+                # Where Δx is assumed as 0.01 of the pipe length.
+                yc = self.critical_depth(flow)
+                Ec = self.specific_energy(flow, yc)
+                downstream_specific_energy = Ec + (self.slope - self.manning_friction_slope(flow, yc)) * (0.01 * self.length)
+            else:
+                print("CASE 3")
+                # Connected outlet - downstream hydraulic state controls the conduit.
+                tailwater_depth = hydraulic_grade - self.downstream_invert
+                downstream_specific_energy = self.specific_energy(flow, tailwater_depth)
+
+            # Partially filled pipe: Solve GVF by Δx
+            regime, depth, energy_grade, hydraulic_grade, velocity, head_loss = self.gvf_profile_by_x(flow, downstream_specific_energy)
+            # EGL and HGL propagate upstream
             hydraulic_result = HydraulicResult(
                 upstream_state=HydraulicState(
-                    regime="open_channel",
-                    depth=upstream_depth,
-                    energy_grade=upstream_energy_grade,
-                    hydraulic_grade=upstream_hydraulic_grade,
-                    velocity=upstream_velocity,
+                    regime=regime,
+                    flow=flow,
+                    depth=depth,
+                    energy_grade=energy_grade,
+                    hydraulic_grade=hydraulic_grade,
+                    velocity=velocity,
                 ),
                 head_loss=head_loss,
             )

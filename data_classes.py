@@ -20,6 +20,7 @@ class HydraulicResult:
 class DownstreamBoundary:
     kind: str
     elevation: float | None = None
+    flow: float = 0.0
     velocity: float = 0.0
 
     def hydraulic_state(self):
@@ -38,6 +39,7 @@ class DownstreamBoundary:
             return HydraulicState(
                 energy_grade=self.elevation + velocity_head,      # EGL
                 hydraulic_grade=self.elevation,                   # HGL / free surface
+                flow=self.flow,                   
                 velocity=self.velocity,                   
                 regime="boundary"
             )

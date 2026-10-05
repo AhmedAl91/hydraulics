@@ -2,16 +2,32 @@
 downstream_boundary_data = {
     "kind": "known_water_level",
     "elevation": 20.0,
+    "flow": 0.10,
     "velocity": 0.0,
 }
 
 pipes_data = []
 
 # fittings are assigned like this:
-# "fitting_type": {
-    # "type": "pipe_entry_sharp_edged",
-    # "position": 0.0
-# }
+# Use library default
+{
+    "type": "pipe_entry_sharp_edged",
+    "position_by_x": 0.0,
+}
+
+# Vendor/user specified
+{
+    "type": "pipe_entry_sharp_edged",
+    "k_value": 0.50,
+    "position_by_x": 0.0,
+}
+
+# Explicitly zero loss
+{
+    "type": "some_fitting",
+    "k_value": 0.0,
+    "position_by_x": 0.0,
+}
 
 channels_data = []
 

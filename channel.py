@@ -34,16 +34,14 @@ class Channel(Conduit):
 
     def critical_depth(self, flow, x=0.0):
         # yc = (((Q / W) ** 2) / G) ** (1/3)
-        # Note on abstraction: python calls this before calling the Conduit (parent) method
+        # Note on abstraction: python calls this as priority above calling the Conduit (parent) method
         width = self.width(x)
 
         return (((flow / width) ** 2) / G) ** (1/3) 
 
     def solve_upstream(self, downstream_state):
-        # Fetch the downstream flow - at some point flow split in junction nodes will be needed but not here for Channels
+        # Fetch the downstream state
         flow = downstream_state.flow
-        
-        # Assess the available energy
         downstream_specific_energy = downstream_state.energy_grade - self.downstream_invert
 
         if self.downstream_width == self.upstream_width:
@@ -251,7 +249,6 @@ class Channel(Conduit):
         
         if freeboard <= 0:
             print(f"Warning: Freeboard of {freeboard:.3f} for component {self.id}")
-
 
         print(f"Solving GVF by Δy for {self.id}:")
         print(f"Flow: {flow:.3f} m³/s")

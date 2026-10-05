@@ -122,13 +122,12 @@ class Network:
         results = {}
 
         for component in components:
-            # flow to be passed as result property?
-            result = component.solve_downstream(flow = component.flow, upstream_state = upstream_state)
+            result = component.solve_downstream(upstream_state = upstream_state)
 
             results.append(result)
 
-            # The domain loop should end when a subcritical regime is reached 
-            if result.regime == "subcritical":
+            # The domain loop should end when a subcritical or pressurised regime is reached 
+            if result.regime == "subcritical" or "pressurised":
                 # assign the result and then break the loop
                 pass 
 

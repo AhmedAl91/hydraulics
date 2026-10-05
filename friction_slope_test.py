@@ -1,10 +1,17 @@
 
-import math
 from constants import G, NU
+import math                                  # for basic mathematic operations
+# import matplotlib.pyplot as plt              # for plotting system curve
+from data_classes import HydraulicState, HydraulicResult, DownstreamBoundary
+
 from conduit import Conduit
-from pipe import Pipe
+from pipe import Pipe 
 from channel import Channel
-from weir import Weir
+from weir import Weir 
+from node import Node 
+from network import Network 
+import system                                # input data
+
 
 def RAS_outlet_flat_channel_flow():
     # Fixed parameters
@@ -76,5 +83,37 @@ def RAS_outlet_tapered_channel_flow():
 
         channel.gvf_profile_by_x(flow, available_specific_energy)
 
-RAS_outlet_flat_channel_flow()
-RAS_outlet_tapered_channel_flow()
+# RAS_outlet_flat_channel_flow()
+# RAS_outlet_tapered_channel_flow()
+
+def partially_filled_pipe_test():
+    downstream_boundary = DownstreamBoundary(**system.downstream_boundary_data)
+    downstream_state = downstream_boundary.hydraulic_state()
+
+    diameter = 0.600
+    downstream_invert = 19.95
+    upstream_invert = 26.00
+    slope = 0.015
+    roughness = 0.003
+    mannings_n = 0.018
+    fittings = None
+    
+    pipe_data = {
+        "id": "test_pipe",
+        "position": 1,
+        "length": 100.0,
+        "diameter": diameter,
+        "downstream_width": diameter,
+        "upstream_width": diameter,
+        "downstream_invert": downstream_invert,
+        "upstream_invert": upstream_invert,
+        "slope": slope,
+        "roughness": roughness,
+        "mannings_n": mannings_n,
+        "fittings": fittings
+    }
+    pipe = Pipe(**pipe_data)
+
+    pipe.solve_upstream(downstream_state=downstream_state)
+
+partially_filled_pipe_test()

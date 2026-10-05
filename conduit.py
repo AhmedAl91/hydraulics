@@ -80,7 +80,8 @@ class Conduit:
         energy_tolerance = 1e-3
 
         if available_energy < Ec - energy_tolerance:
-            raise ValueError(f"Insufficient energy estimated in {self.id}, check parameters.")
+            print(f"available_energy={available_energy}, Ec={Ec}, id={self.id}")
+            raise ValueError(f"Insufficient energy estimated for Conduit, check parameters.")
         
         if abs(available_energy - Ec) <= energy_tolerance:
             return yc

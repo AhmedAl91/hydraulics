@@ -4,7 +4,7 @@ This is a back-end model for 1D hydraulic assessments. It is built from bottom u
 
 - Dataclasses for hydraulic states/results (see data_classes.py) which allows the user to define the downstream boundary (e.g. an outfall), and enables the model to propagate the hydraulic state through a calculation loop.
 
-- Fixed parameters and default look-up data exist in constants.py and fittings.py
+- Fixed parameters and default look-up data exist in constants.py and fittings.py.
   
 - Classes for Conduits (see conduit.py, pipe.py, channel.py) and Components (see weir.py) which are constructed with design parameters (dimensions, roughness, fittings etc) and hydraulic methods where relevant for their geometry e.g. head losses in filled pipes, gradually varied profiles in channels. Methods have the same name across child classes to ensure abstraction. 
 
@@ -21,6 +21,6 @@ Further work to develop this model:
 
   **∑Qin - ∑Qout = 0**
 
-- If the residual flow > tolerance then the head losses are re-calculated using an iterative method (presumably bi-section of flows)
+- If the residual flow > tolerance then the head losses are re-calculated using an iterative method (presumably bi-section of flows).
 
-- User input API with JSON
+- User input API with JSON.
