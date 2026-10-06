@@ -14,6 +14,23 @@ This is a back-end model for 1D hydraulic assessments. It is built from bottom u
 
 - Objects are constructed and methods orchestrated via main.py, fetching data in system.py; this will need replacing with an API for user input.
 
+- Hierarchy for solving hydraulics:
+
+                Steady open-channel hydraulics
+                          │
+                ┌─────────┴─────────┐
+                │                   │
+            GVF methods          Controls / RVF
+                │                   │
+      ┌─────────┼─────────┐         ├── weir
+      │         │         │         ├── free overfall
+  standard    direct    dy/dx       ├── hydraulic jump
+    step        step    integration └── transition
+      │
+      │ primary network solver
+      │
+      ├── upstream/subcritical
+      └── downstream/supercritical
 
 Further work to develop this model:
 

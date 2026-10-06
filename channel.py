@@ -46,10 +46,11 @@ class Channel(Conduit):
 
         if self.downstream_width == self.upstream_width:
             # Δy is set → solve Δx
-            regime, depth, energy_grade, hydraulic_grade, velocity, head_loss = self.gvf_profile_by_y(flow, downstream_specific_energy)
+            regime, depth, energy_grade, hydraulic_grade, velocity, head_loss = self.direct_step(flow, downstream_specific_energy)
         else:
             # Δx known → geometry known → solve y_up
-            regime, depth, energy_grade, hydraulic_grade, velocity, head_loss = self.gvf_profile_by_x(flow, downstream_specific_energy)
+            regime, depth, energy_grade, hydraulic_grade, velocity, head_loss = self.dy_dx_integration(flow, downstream_specific_energy)
+            # Trial out standard step method and replace this ^
 
         hydraulic_result = HydraulicResult(
             upstream_state=HydraulicState(
@@ -65,7 +66,8 @@ class Channel(Conduit):
 
         return hydraulic_result
     
-    def gvf_profile_by_x(self, flow, available_specific_energy, tolerance=1e-6):
+    def dy_dx_integration(self, flow, available_specific_energy, tolerance=1e-6):
+        # Depth from distance method
         # dy/dx = (Sf - S0) / (1 - Fr**2)
         # The change in head of free flowing water is proportional to the friction slope (Sf)
         # which is a measure of head loss per unit distance. It is a function of velocity (inferred through Fr)
@@ -163,7 +165,8 @@ class Channel(Conduit):
 
         return regime, depth, energy_grade, velocity, hydraulic_grade, head_loss
 
-    def gvf_profile_by_y(self, flow, available_specific_energy):
+    def direct_step(self, flow, available_specific_energy):
+        # Direct step method - distance from depth
         # dy/dx = (Sf - S0) / (1 - Fr**2)
         # The change in head (and therefore depth) of free flowing water is proportional to the friction slope (Sf)
         # which is a measure of head loss per unit distance. It is a function of velocity (inferred through Fr)
@@ -173,7 +176,7 @@ class Channel(Conduit):
         # It only works for straight lengths of channels, i.e. does not work for pipes nor tapered channels 
         # as they have intermittent / variable losses as a function of x (fittings, or change in width).
 
-        # The direct step method is derived from literature, where the downstream hydraulic state is defined,
+        # The downstream hydraulic state is defined,
         # the gradient backing upstream is estimated, and then the upstream hydraulic state is derived.
         # Interpolation is required afterwards, as small changes in y can result in large x changes, 
         # and can overshoot. 

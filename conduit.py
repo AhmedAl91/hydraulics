@@ -26,7 +26,7 @@ class Conduit:
 
     def hydraulic_radius(self, depth, x=0.0):
         # Rh = A / P
-        # Used for Manning friction slope of channels and partially fileld pipes
+        # Used for Manning friction slope of channels and partially filled pipes
         return self.area(depth, x) / self.wetted_perimeter(depth)
 
     def hydraulic_depth(self, depth, x=0.0):
@@ -45,6 +45,11 @@ class Conduit:
         if A <= 0: raise ValueError(f"{self.id}: Area must be greater than zero.")
 
         return flow / A 
+
+    def z_value(self, x):
+        # Used to estimate elevation for a given position of x
+        # x = 0 at the upstream end, x = self.length at the downstream end
+        return self.upstream_invert - self.slope * x
 
     def froude_number(self, flow, depth, x=0.0):
         # Fr = V / sqrt(G * Dh)

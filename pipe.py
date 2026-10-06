@@ -95,7 +95,176 @@ class Pipe(Conduit):
 
         return friction_loss + fittings_loss
 
-    def gvf_profile_by_x(self, flow, available_specific_energy, tolerance=1e-6):
+    def standard_step(self, flow, known_state, x_from, x_to, tolerance=1e-6, regime="subcritical"):
+        # Standard step method - best as the default solver method as it is direction agnostic
+
+        # For any steady state flow:
+
+        #       H = z + E = z + y + velocity head
+
+        #       H up = H down + head loss
+
+        # where 
+        #       head loss ~= Sf_mean.Δx
+
+        # therefore 
+        #       H up - H down = Sf_mean.Δx
+
+        # Positive dx is defined as downstream flow i.e. head loss is proportionate to Sf_mean * dx
+           
+        if not 0 <= x_from <= self.length:
+            print(f"Warning: position of x_from {x_from} cannot be negative nor greater than the conduit length.")
+            return
+
+        if not 0 <= x_to <= self.length:
+            print(f"Warning: position of x_to {x_to} cannot be negative nor greater than the conduit length.")
+            return
+
+        # For subcritical flow
+        # UPSTREAM                          DOWNSTREAM
+
+        # unknown  ← ← ← ← ← ←  known boundary
+        
+
+        # For supercritical flow
+        # UPSTREAM                          DOWNSTREAM
+
+        # known control  → → → → → → →   unknown
+
+        energy_tolerance = 1e-3
+        critical_tolerance = 5e-2
+
+        if regime == "subcritical":
+            pass
+
+        elif regime == "supercritical":
+            pass
+
+        else:
+            print("Warning: direction based on flow regime not defined.")
+            return
+
+        x = x_from
+        y = known_state.depth
+        H = known_state.energy_grade
+
+        z = self.z_value(x)
+        E = H - z
+        Fr = self.froude_number(flow, y, x)
+        head_loss = 0.0
+
+        direction = 1 if x_to > x_from else -1
+
+        delta_x = direction * min(abs(x_to - x_from) * 1e-4, 1e-3)
+
+        while direction * (x_to - x) > 0:
+
+            # ---------------------------------
+            # Define next spatial section
+            # ---------------------------------
+
+            x_next = x + delta_x
+
+            if direction * (x_next - x_to) > 0:
+                x_next = x_to
+
+            dx = x_next - x
+
+            z_next = self.z_value(x_next)
+
+            # ---------------------------------
+            # Known friction slope
+            # ---------------------------------
+
+            Sf = self.manning_friction_slope(flow, y, x)
+
+            Sf_mean = Sf
+
+            # ---------------------------------
+            # Standard-step iteration
+            # ---------------------------------
+            
+            for _ in range(20):
+                yc = self.critical_depth(flow)
+                Ec = self.specific_energy(flow, yc, x_next)
+
+                if E_next <= Ec * (1 + energy_tolerance):
+                    print("Critical-control event.") 
+                    return # GVF status
+                
+                H_next = H - Sf_mean * dx
+
+                E_next = H_next - z_next 
+
+                y_next = self.depth_from_energy(flow, E_next, x_next, regime)
+
+                Sf_next = self.manning_friction_slope(flow, y_next, x_next)
+
+                Sf_new = (Sf + Sf_next) / 2
+
+                if abs(Sf_new - Sf_mean) < tolerance:
+                    Sf_mean = Sf_new
+                    break
+
+                Sf_mean = Sf_new
+
+            # ---------------------------------
+            # Evaluate hydraulic state
+            # ---------------------------------
+                
+            Fr_next = self.froude_number(flow, y_next, x_next)
+
+            if y_next >= self.max_depth:
+                print("Surcharge event.") 
+                return # GVF status
+
+            # ---------------------------------
+            # Accept step
+            # ---------------------------------
+
+            step_head_loss = Sf_mean * abs(dx)
+            head_loss += step_head_loss
+            x = x_next
+            y = y_next
+            z = z_next
+            H = H_next
+            E = E_next
+            Fr = Fr_next
+
+        freeboard = self.max_depth - y
+        
+        if freeboard <= 0:
+            print(f"Warning: Freeboard of {freeboard:.3f} for component {self.id}")
+
+        print(f"Solving GVF by Standard Step Method for {self.id}:")
+        print(f"Flow: {1000 * flow:.3f} l/s with a {regime} regime")
+        print(f"Finishing depth:   {y:.3f} m")
+        print(f"Freeboard:        {freeboard:.3f} m")
+        print(f"Finishing Fr:      {Fr:.3f}")
+        print("-----------------------------")
+
+        if Fr_next < 1: 
+            regime = "subcritical"
+
+        elif Fr_next == 1: 
+            regime = "critical"
+
+        elif Fr_next > 1: 
+            regime = "supercritical"
+
+        result = {
+            "regime" : regime,
+            "energy_grade" : E + z,
+            "hydraulic_grade" : y + z,
+            "velocity" : self.velocity(flow, y, x_to),
+            "head_loss" : head_loss
+        }
+
+        return result
+
+    
+    def dy_dx_integration(self, flow, available_specific_energy, tolerance=1e-6):
+        # Depth from distance method
         # For steady gradually varied flow:
         #
         #     dy/dx = (Sf - S0) / (1 - Fr**2)
@@ -306,7 +475,7 @@ class Pipe(Conduit):
                 downstream_specific_energy = self.specific_energy(flow, tailwater_depth)
 
             # Partially filled pipe: Solve GVF by Δx
-            regime, depth, energy_grade, hydraulic_grade, velocity, head_loss = self.gvf_profile_by_x(flow, downstream_specific_energy)
+            regime, depth, energy_grade, hydraulic_grade, velocity, head_loss = self.dy_dx_integration(flow, downstream_specific_energy)
             # EGL and HGL propagate upstream
             hydraulic_result = HydraulicResult(
                 upstream_state=HydraulicState(
