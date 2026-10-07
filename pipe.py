@@ -243,14 +243,11 @@ class Pipe(Conduit):
         print(f"Finishing Fr:      {Fr:.3f}")
         print("-----------------------------")
 
-        if Fr_next < 1: 
-            regime = "subcritical"
+        if regime == "subcritical" and Fr >= 1.0:
+            return # Something inconsistent occurred
 
-        elif Fr_next == 1: 
-            regime = "critical"
-
-        elif Fr_next > 1: 
-            regime = "supercritical"
+        elif regime == "supercritical" and Fr <= 1.0:
+            return # Something inconsistent occurred
 
         result = {
             "regime" : regime,
